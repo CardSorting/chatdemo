@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,67 +9,37 @@ import {
   ChevronRight,
   Sparkles,
 } from "lucide-react";
-
-interface GalleryItem {
-  id: number;
-  name: string;
-  description: string;
-  avatar: string;
-  creator: string;
-  likes: number;
-  messages: number;
-  tags: string[];
-}
+import { Companion, fetchCompanions } from "@/lib/companions";
 
 interface GalleryProps {
-  items?: GalleryItem[];
   itemsPerPage?: number;
 }
 
-const defaultItems: GalleryItem[] = [
-  {
-    id: 1,
-    name: "Neo",
-    description: "A philosophical AI companion who questions reality.",
-    avatar:
-      "https://api.dicebear.com/7.x/bottts/svg?seed=neo&backgroundColor=00ff00",
-    creator: "Trinity",
-    likes: 2453,
-    messages: 12890,
-    tags: ["Philosophy", "Matrix", "Deep Thoughts"],
-  },
-  {
-    id: 2,
-    name: "Synthia",
-    description: "Creative AI focused on digital art and music composition.",
-    avatar:
-      "https://api.dicebear.com/7.x/bottts/svg?seed=synthia&backgroundColor=ff00ff",
-    creator: "ArtBot",
-    likes: 1892,
-    messages: 8745,
-    tags: ["Creative", "Art", "Music"],
-  },
-  {
-    id: 3,
-    name: "DataPrime",
-    description: "Your personal data analyst and research companion.",
-    avatar:
-      "https://api.dicebear.com/7.x/bottts/svg?seed=dataprime&backgroundColor=0000ff",
-    creator: "QuantumLogic",
-    likes: 3201,
-    messages: 15678,
-    tags: ["Analysis", "Research", "Data"],
-  },
-];
-
-const Gallery = ({ items = defaultItems, itemsPerPage = 3 }: GalleryProps) => {
+const Gallery = ({ itemsPerPage = 3 }: GalleryProps) => {
+  const [companions, setCompanions] = useState<Companion[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const totalPages = Math.ceil(items.length / itemsPerPage);
+  useEffect(() => {
+    loadCompanions();
+  }, []);
+
+  const loadCompanions = async () => {
+    try {
+      const data = await fetchCompanions();
+      setCompanions(data);
+    } catch (error) {
+      console.error("Error loading companions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalPages = Math.ceil(companions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = items.slice(startIndex, endIndex);
+  const currentItems = companions.slice(startIndex, endIndex);
 
   const nextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -100,11 +70,11 @@ const Gallery = ({ items = defaultItems, itemsPerPage = 3 }: GalleryProps) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {currentItems.map((item) => (
+          {currentItems.map((companion) => (
             <Card
-              key={item.id}
-              className={`group relative bg-black/40 backdrop-blur-sm border-green-500/20 hover:border-green-500/40 transition-all duration-500 overflow-hidden transform hover:scale-[1.02] ${hoveredCard === item.id ? "ring-2 ring-green-500/50" : ""}`}
-              onMouseEnter={() => setHoveredCard(item.id)}
+              key={companion.id}
+              className={`group relative bg-black/40 backdrop-blur-sm border-green-500/20 hover:border-green-500/40 transition-all duration-500 overflow-hidden transform hover:scale-[1.02] ${hoveredCard === companion.id ? "ring-2 ring-green-500/50" : ""}`}
+              onMouseEnter={() => setHoveredCard(companion.id)}
               onMouseLeave={() => setHoveredCard(null)}
             >
               {/* Glow Effect */}
@@ -114,28 +84,28 @@ const Gallery = ({ items = defaultItems, itemsPerPage = 3 }: GalleryProps) => {
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <img
-                      src={item.avatar}
-                      alt={item.name}
+                      src={companion.avatar_url}
+                      alt={companion.name}
                       className="w-16 h-16 rounded-full border-2 border-green-500/50 group-hover:border-green-500 transition-colors duration-300"
                     />
                     <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-white group-hover:text-green-400 transition-colors duration-300">
-                      {item.name}
+                      {companion.name}
                     </h3>
                     <p className="text-sm text-gray-400">
-                      Created by {item.creator}
+                      Created by {companion.creator_name}
                     </p>
                   </div>
                 </div>
 
                 <p className="text-gray-300 group-hover:text-gray-200 transition-colors duration-300">
-                  {item.description}
+                  {companion.description}
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  {item.tags.map((tag) => (
+                  {companion.tags.map((tag) => (
                     <span
                       key={tag}
                       className="px-2 py-1 text-xs rounded-full bg-green-500/10 text-green-500 border border-green-500/20 group-hover:bg-green-500/20 group-hover:border-green-500/30 transition-all duration-300"
@@ -153,7 +123,7 @@ const Gallery = ({ items = defaultItems, itemsPerPage = 3 }: GalleryProps) => {
                       className="text-gray-400 hover:text-green-500 gap-2 group/btn"
                     >
                       <Heart className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                      {item.likes.toLocaleString()}
+                      {companion.likes_count.toLocaleString()}
                     </Button>
                     <Button
                       variant="ghost"
@@ -161,7 +131,7 @@ const Gallery = ({ items = defaultItems, itemsPerPage = 3 }: GalleryProps) => {
                       className="text-gray-400 hover:text-green-500 gap-2 group/btn"
                     >
                       <MessageCircle className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                      {item.messages.toLocaleString()}
+                      {companion.messages_count.toLocaleString()}
                     </Button>
                   </div>
                   <Button
