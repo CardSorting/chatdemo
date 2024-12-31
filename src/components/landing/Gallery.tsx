@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { Companion, fetchCompanions } from "@/lib/companions";
 
@@ -47,6 +48,10 @@ const Gallery = ({ itemsPerPage = 3 }: GalleryProps) => {
 
   const prevPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleChat = (chatUrl: string) => {
+    window.open(chatUrl, "_blank");
   };
 
   return (
@@ -128,6 +133,7 @@ const Gallery = ({ itemsPerPage = 3 }: GalleryProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleChat(companion.chat_url)}
                       className="text-gray-400 hover:text-green-500 gap-2 group/btn"
                     >
                       <MessageCircle className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
@@ -135,11 +141,12 @@ const Gallery = ({ itemsPerPage = 3 }: GalleryProps) => {
                     </Button>
                   </div>
                   <Button
-                    variant="ghost"
+                    onClick={() => handleChat(companion.chat_url)}
+                    className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white gap-2 group/btn"
                     size="sm"
-                    className="text-gray-400 hover:text-green-500 group/btn"
                   >
-                    <Share2 className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                    Chat
+                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                   </Button>
                 </div>
               </div>

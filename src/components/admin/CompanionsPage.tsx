@@ -33,7 +33,6 @@ import {
   fetchCompanions,
   updateCompanion,
 } from "@/lib/companions";
-import { format } from "date-fns";
 
 const CompanionsPage = () => {
   const [companions, setCompanions] = useState<Companion[]>([]);
@@ -48,6 +47,7 @@ const CompanionsPage = () => {
     name: "",
     description: "",
     avatar_url: "",
+    chat_url: "",
     tags: "",
   });
 
@@ -75,6 +75,7 @@ const CompanionsPage = () => {
         avatar_url:
           formData.avatar_url ||
           `https://api.dicebear.com/7.x/bottts/svg?seed=${formData.name}`,
+        chat_url: formData.chat_url,
         creator_id: user?.id!,
         creator_name:
           profile?.full_name || user?.email?.split("@")[0] || "Anonymous",
@@ -103,6 +104,7 @@ const CompanionsPage = () => {
       name: companion.name,
       description: companion.description,
       avatar_url: companion.avatar_url,
+      chat_url: companion.chat_url,
       tags: companion.tags.join(", "),
     });
     setIsDialogOpen(true);
@@ -124,6 +126,7 @@ const CompanionsPage = () => {
       name: "",
       description: "",
       avatar_url: "",
+      chat_url: "",
       tags: "",
     });
     setEditingCompanion(null);
@@ -184,6 +187,19 @@ const CompanionsPage = () => {
                   }
                   className="bg-black/50 border-green-500/20 text-white"
                   placeholder="Leave blank for auto-generated avatar"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="chat_url">Chat URL</Label>
+                <Input
+                  id="chat_url"
+                  value={formData.chat_url}
+                  onChange={(e) =>
+                    setFormData({ ...formData, chat_url: e.target.value })
+                  }
+                  className="bg-black/50 border-green-500/20 text-white"
+                  placeholder="https://example.com/chat"
+                  required
                 />
               </div>
               <div className="space-y-2">

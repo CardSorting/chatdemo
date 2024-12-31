@@ -10,6 +10,7 @@ export interface Companion {
   likes_count: number;
   messages_count: number;
   tags: string[];
+  chat_url: string;
   created_at: string;
   updated_at: string;
 }
