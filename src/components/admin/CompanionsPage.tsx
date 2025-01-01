@@ -24,7 +24,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Plus, Trash, Edit } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  MoreHorizontal,
+  Plus,
+  Trash,
+  Edit,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
   Companion,
@@ -32,6 +40,7 @@ import {
   deleteCompanion,
   fetchCompanions,
   updateCompanion,
+  moderateCompanion,
 } from "@/lib/companions";
 
 const CompanionsPage = () => {
@@ -41,6 +50,14 @@ const CompanionsPage = () => {
   const [editingCompanion, setEditingCompanion] = useState<Companion | null>(
     null,
   );
+  const [moderationDialog, setModerationDialog] = useState<{
+    open: boolean;
+    companion?: Companion;
+    feedback: string;
+  }>({
+    open: false,
+    feedback: "",
+  });
   const { user, profile } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -57,7 +74,7 @@ const CompanionsPage = () => {
 
   const loadCompanions = async () => {
     try {
-      const data = await fetchCompanions();
+      const data = await fetchCompanions({ includeAll: true });
       setCompanions(data);
     } catch (error) {
       console.error("Error loading companions:", error);
@@ -98,6 +115,23 @@ const CompanionsPage = () => {
     }
   };
 
+  const handleModerate = async (status: "approved" | "rejected") => {
+    if (!moderationDialog.companion) return;
+
+    try {
+      await moderateCompanion(
+        moderationDialog.companion.id,
+        status,
+        moderationDialog.feedback,
+        user?.id,
+      );
+      await loadCompanions();
+      setModerationDialog({ open: false, feedback: "" });
+    } catch (error) {
+      console.error("Error moderating companion:", error);
+    }
+  };
+
   const handleEdit = (companion: Companion) => {
     setEditingCompanion(companion);
     setFormData({
@@ -130,6 +164,17 @@ const CompanionsPage = () => {
       tags: "",
     });
     setEditingCompanion(null);
+  };
+
+  const getStatusBadgeClass = (status: Companion["status"]) => {
+    switch (status) {
+      case "approved":
+        return "bg-green-500/10 text-green-500";
+      case "rejected":
+        return "bg-red-500/10 text-red-500";
+      default:
+        return "bg-yellow-500/10 text-yellow-500";
+    }
   };
 
   return (
@@ -226,90 +271,168 @@ const CompanionsPage = () => {
         </Dialog>
       </div>
 
-      <div className="rounded-lg border border-green-500/20 bg-black/50 backdrop-blur-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Creator</TableHead>
-              <TableHead>Tags</TableHead>
-              <TableHead>Stats</TableHead>
-              <TableHead className="w-[70px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {companions.map((companion) => (
-              <TableRow key={companion.id}>
-                <TableCell className="font-medium text-white">
-                  <div className="flex items-center space-x-3">
-                    <img
-                      src={companion.avatar_url}
-                      alt={companion.name}
-                      className="h-8 w-8 rounded-full"
-                    />
-                    <span>{companion.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="max-w-[300px] truncate">
-                  {companion.description}
-                </TableCell>
-                <TableCell>{companion.creator_name}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {companion.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-500"
-                      >
-                        {tag}
-                      </span>
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-black/50">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="approved">Approved</TabsTrigger>
+        </TabsList>
+
+        {["all", "pending", "approved"].map((tab) => (
+          <TabsContent key={tab} value={tab}>
+            <div className="rounded-lg border border-green-500/20 bg-black/50 backdrop-blur-sm">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Creator</TableHead>
+                    <TableHead>Tags</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[70px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {companions
+                    .filter(
+                      (companion) => tab === "all" || companion.status === tab,
+                    )
+                    .map((companion) => (
+                      <TableRow key={companion.id}>
+                        <TableCell className="font-medium text-white">
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={companion.avatar_url}
+                              alt={companion.name}
+                              className="h-8 w-8 rounded-full"
+                            />
+                            <span>{companion.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-[300px] truncate">
+                          {companion.description}
+                        </TableCell>
+                        <TableCell>{companion.creator_name}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {companion.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-500"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadgeClass(companion.status)}`}
+                          >
+                            {companion.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-gray-400 hover:text-green-400"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              className="w-[160px] bg-black/90 backdrop-blur-sm border-green-500/20"
+                            >
+                              {companion.status === "pending" && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      setModerationDialog({
+                                        open: true,
+                                        companion,
+                                        feedback: "",
+                                      })
+                                    }
+                                    className="text-green-400 hover:text-green-500 cursor-pointer"
+                                  >
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Review
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => handleEdit(companion)}
+                                className="text-gray-400 hover:text-green-400 cursor-pointer"
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(companion.id)}
+                                className="text-red-400 hover:text-red-500 cursor-pointer"
+                              >
+                                <Trash className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="space-x-2 text-sm text-gray-400">
-                    <span>{companion.likes_count} likes</span>
-                    <span>•</span>
-                    <span>{companion.messages_count} messages</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-8 w-8 p-0 text-gray-400 hover:text-green-400"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-[160px] bg-black/90 backdrop-blur-sm border-green-500/20"
-                    >
-                      <DropdownMenuItem
-                        onClick={() => handleEdit(companion)}
-                        className="text-gray-400 hover:text-green-400 cursor-pointer"
-                      >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleDelete(companion.id)}
-                        className="text-red-400 hover:text-red-500 cursor-pointer"
-                      >
-                        <Trash className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
+
+      {/* Moderation Dialog */}
+      <Dialog
+        open={moderationDialog.open}
+        onOpenChange={(open) => setModerationDialog({ open, feedback: "" })}
+      >
+        <DialogContent className="sm:max-w-[425px] bg-black/90 border-green-500/20">
+          <DialogHeader>
+            <DialogTitle className="text-white">Review Companion</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="feedback">Feedback (optional)</Label>
+              <Textarea
+                id="feedback"
+                value={moderationDialog.feedback}
+                onChange={(e) =>
+                  setModerationDialog((prev) => ({
+                    ...prev,
+                    feedback: e.target.value,
+                  }))
+                }
+                className="bg-black/50 border-green-500/20 text-white"
+                placeholder="Provide feedback for rejection..."
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handleModerate("approved")}
+                className="flex-1 bg-green-500 hover:bg-green-600"
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Approve
+              </Button>
+              <Button
+                onClick={() => handleModerate("rejected")}
+                className="flex-1 bg-red-500 hover:bg-red-600"
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Reject
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
