@@ -1,27 +1,27 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
-import { useUserProfile } from "@/lib/hooks/useUserProfile";
-import ProfileHeader from "./ProfileHeader";
-import ProfileTabs from "./ProfileTabs";
-import UserStats from "./UserStats";
-import UserSocialStats from "./UserSocialStats";
+import { useProfile } from "@/hooks/useProfile";
+import { Card } from "@/components/ui/card";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import ProfileHeader from "./ProfileHeader";
+import ProfileStats from "./ProfileStats";
+import ProfileTabs from "./ProfileTabs";
+import SocialStats from "./SocialStats";
 
-const UserProfile = () => {
+const ProfileContainer = () => {
   const { userId } = useParams();
   const { user: currentUser } = useAuth();
   const {
     profile,
-    companions,
-    achievements,
     stats,
     socialStats,
+    companions,
+    achievements,
     loading,
     error,
-    refreshData,
-  } = useUserProfile(userId!);
+    refreshProfile,
+  } = useProfile(userId!);
 
   const isOwnProfile = currentUser?.id === userId;
 
@@ -48,19 +48,16 @@ const UserProfile = () => {
       <ProfileHeader profile={profile} stats={stats} />
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
-        {/* Social Stats */}
         {socialStats && (
-          <UserSocialStats
+          <SocialStats
             userId={userId!}
             stats={socialStats}
-            onStatsChange={refreshData}
+            onStatsChange={refreshProfile}
           />
         )}
 
-        {/* Stats Overview */}
-        {stats && <UserStats stats={stats} />}
+        {stats && <ProfileStats stats={stats} />}
 
-        {/* Main Content */}
         <ProfileTabs
           companions={companions}
           achievements={achievements}
@@ -76,4 +73,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile;
+export default ProfileContainer;

@@ -19,13 +19,10 @@ const Home = () => {
       {/* Animated grid overlay */}
       <div className="fixed inset-0 bg-[linear-gradient(transparent_1px,_#000_1px),linear-gradient(90deg,transparent_1px,_#000_1px)] bg-[size:30px_30px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-30 pointer-events-none" />
 
-      {/* Header */}
-      <Header />
-
       {/* Main content */}
-      <main className="relative z-10">
+      <main className="relative z-10 pt-16">
         {/* Hero Section with Chat Demo */}
-        <div className="relative min-h-screen pt-16">
+        <div className="relative min-h-screen">
           <div className="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col lg:flex-row items-center gap-12 py-16">
             {/* Hero Content */}
             <div className="flex-1 text-center lg:text-left">
