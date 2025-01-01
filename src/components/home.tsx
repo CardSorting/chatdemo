@@ -7,9 +7,26 @@ import TopCreators from "./landing/TopCreators";
 import Footer from "./landing/Footer";
 import ChatDemo from "./landing/ChatDemo";
 import FeaturedCompanions from "./landing/FeaturedCompanions";
+import { useAuth } from "@/lib/auth";
+import { Card } from "./ui/card";
+import { Loader2 } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-black flex items-center justify-center">
+        <Card className="p-8 bg-black/50 backdrop-blur-sm border-green-500/20">
+          <div className="flex items-center space-x-4">
+            <Loader2 className="h-6 w-6 animate-spin text-green-500" />
+            <p className="text-green-500">Loading...</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-black overflow-x-hidden">
@@ -18,6 +35,9 @@ const Home = () => {
 
       {/* Animated grid overlay */}
       <div className="fixed inset-0 bg-[linear-gradient(transparent_1px,_#000_1px),linear-gradient(90deg,transparent_1px,_#000_1px)] bg-[size:30px_30px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-30 pointer-events-none" />
+
+      {/* Header */}
+      <Header />
 
       {/* Main content */}
       <main className="relative z-10 pt-16">
