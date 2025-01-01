@@ -4,15 +4,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Mail, User } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useAuth, createAdminUser } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 
 const AdminLoginPage = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { isAdmin } = useAuth();
@@ -28,33 +26,22 @@ const AdminLoginPage = () => {
     setError("");
 
     try {
-      if (isSignUp) {
-        // Create admin user
-        const { success, error } = await createAdminUser(
-          email,
-          password,
-          fullName,
-        );
-        if (!success) throw error;
-      } else {
-        // Login
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", data.user.id)
-          .single();
+      // Check if user is admin
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
 
-        if (profile?.role !== "admin") {
-          throw new Error("Unauthorized access");
-        }
+      if (profile?.role !== "admin") {
+        throw new Error("Unauthorized access");
       }
     } catch (error) {
       setError(
@@ -80,27 +67,10 @@ const AdminLoginPage = () => {
 
         <div className="relative">
           <h2 className="text-2xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500">
-            {isSignUp ? "Create Admin Account" : "Admin Login"}
+            Admin Login
           </h2>
 
           <form onSubmit={handleLogin} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="fullName"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10 bg-black/50 border-green-500/20 text-white"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -141,22 +111,7 @@ const AdminLoginPage = () => {
               className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-black font-semibold"
               disabled={loading}
             >
-              {loading
-                ? "Processing..."
-                : isSignUp
-                  ? "Create Admin Account"
-                  : "Login"}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full text-gray-400 hover:text-green-400"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp
-                ? "Already have an account? Login"
-                : "Create your first admin account"}
+              {loading ? "Processing..." : "Login"}
             </Button>
           </form>
         </div>

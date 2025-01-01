@@ -11,42 +11,6 @@ export type Profile = {
   updated_at: string;
 };
 
-export const createAdminUser = async (
-  email: string,
-  password: string,
-  fullName: string,
-) => {
-  try {
-    // 1. Create the user in auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
-
-    if (authError) throw authError;
-
-    // 2. Update the user's role to admin
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ role: "admin" })
-        .eq("id", authData.user.id);
-
-      if (profileError) throw profileError;
-    }
-
-    return { success: true, error: null };
-  } catch (error) {
-    console.error("Error creating admin user:", error);
-    return { success: false, error };
-  }
-};
-
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
