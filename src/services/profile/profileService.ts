@@ -78,6 +78,58 @@ class ProfileService {
 
     return data;
   }
+
+  async getAchievements(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from("achievements")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      throw error;
+    }
+  }
+
+  async getUserAchievements(userId: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from("user_achievements")
+        .select("*, achievements(*)")
+        .eq("user_id", userId);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error fetching user achievements:", error);
+      throw error;
+    }
+  }
+
+  async updateAchievementProgress(userId: string, achievementId: string, progress: number): Promise<any> {
+    try {
+      const { data, error } = await supabase
+        .from("user_achievements")
+        .upsert({
+          user_id: userId,
+          achievement_id: achievementId,
+          progress: progress,
+          completed: progress >= 100,
+          completed_at: progress >= 100 ? new Date().toISOString() : null
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error updating achievement progress:", error);
+      throw error;
+    }
+  }
 }
 
 export const profileService = new ProfileService();

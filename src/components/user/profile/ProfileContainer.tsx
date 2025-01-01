@@ -46,16 +46,10 @@ const ProfileContainer = () => {
     );
   }
 
-  const isOwnProfile = currentUser?.id === userId;
-
-  // Create default stats if none exist
+  // Create default stats
   const defaultStats = {
-    total_companions: 0,
-    total_likes: 0,
-    total_messages: 0,
-    achievements_count: 0,
     rank: 0,
-    top_category: "New User",
+    top_category: "New User"
   };
 
   // Create default social stats if none exist
@@ -87,9 +81,6 @@ const ProfileContainer = () => {
           <div className="relative mt-12">
             <ProfileTabs
               companions={[]}
-              achievements={[]}
-              stats={defaultStats}
-              isOwnProfile={isOwnProfile}
             />
           </div>
         </div>

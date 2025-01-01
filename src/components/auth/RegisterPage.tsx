@@ -9,6 +9,7 @@ const RegisterPage = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,20 +21,41 @@ const RegisterPage = () => {
       return;
     }
 
+    if (!username || username.length < 3) {
+      setError("Username must be at least 3 characters");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
     try {
-      const { error } = await supabase.auth.signUp({
+      // Create auth user
+      const { data: authUser, error: authError } = await supabase.auth.signUp({
         email,
         password
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      // Create profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authUser.user?.id,
+          username,
+          email
+        });
+
+      if (profileError) throw profileError;
       
       await signIn(email, password);
       navigate(-1); // Go back to previous page after registration
     } catch (err) {
-      setError(err.message || "Registration failed");
+      if (err.code === '23505') {
+        setError("Username already exists");
+      } else {
+        setError(err.message || "Registration failed");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -51,6 +73,12 @@ const RegisterPage = () => {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
           <Input
             type="password"

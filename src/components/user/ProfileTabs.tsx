@@ -7,21 +7,16 @@ const ProfileTabs = ({
   companions,
   achievements,
   stats,
-  isOwnProfile,
 }: {
   companions: any[];
   achievements: any[];
   stats: any;
-  isOwnProfile: boolean;
 }) => {
   return (
     <Tabs defaultValue="companions" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="companions">Companions</TabsTrigger>
         <TabsTrigger value="achievements">Achievements</TabsTrigger>
-        {isOwnProfile && (
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        )}
       </TabsList>
 
       <TabsContent value="companions">
