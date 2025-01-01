@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/lib/auth";
-import { createCompanion } from "@/lib/companions";
+import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { useAuth } from "../../lib/auth";
+import { createCompanion } from "../../lib/companions";
 import {
   Bot,
   Loader2,
@@ -107,9 +107,7 @@ const SubmitCompanion = () => {
 
           {/* Quick Guide */}
           <div className="mb-8 p-6 bg-green-500/5 border border-green-500/20 rounded-lg relative overflow-hidden">
-            {/* Decorative corner sparkle */}
             <Sparkles className="absolute top-2 right-2 w-5 h-5 text-green-500/40" />
-
             <h3 className="flex items-center gap-2 text-green-400 font-semibold mb-4">
               <Info className="w-5 h-5" />
               Submission Guidelines
@@ -117,8 +115,7 @@ const SubmitCompanion = () => {
             <ul className="text-sm text-gray-400 space-y-2 list-none">
               <li className="flex items-center gap-2">
                 <Bot className="w-4 h-4 text-green-500" />
-                Choose a memorable name that reflects your companion's
-                personality
+                Choose a memorable name that reflects your companion's personality
               </li>
               <li className="flex items-center gap-2">
                 <Upload className="w-4 h-4 text-green-500" />
@@ -136,112 +133,134 @@ const SubmitCompanion = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Preview Card */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-              <Card className="relative p-4 bg-black/60 backdrop-blur-sm border-green-500/20 flex items-center gap-4">
-                <img
-                  src={getPreviewImage()}
-                  alt="Avatar preview"
-                  className="w-20 h-20 rounded-full border-2 border-green-500/50"
-                />
-                <div>
-                  <h3 className="text-xl font-semibold text-white">
-                    {formData.name || "Your Companion Name"}
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {formData.description ||
-                      "Companion description will appear here"}
-                  </p>
-                </div>
-              </Card>
+            {/* Preview Section */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-white">
+                Companion Preview
+              </h2>
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
+                <Card className="relative p-4 bg-black/60 backdrop-blur-sm border-green-500/20 flex items-center gap-4">
+                  <img
+                    src={getPreviewImage()}
+                    alt="Avatar preview"
+                    className="w-20 h-20 rounded-full border-2 border-green-500/50"
+                  />
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">
+                      {formData.name || "Your Companion Name"}
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                      {formData.description ||
+                        "Companion description will appear here"}
+                    </p>
+                  </div>
+                </Card>
+              </div>
             </div>
 
-            {/* Form Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-gray-200">
-                    Companion Name *
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
-                    placeholder="e.g., PhilosopherBot"
-                    required
-                  />
+            {/* Basic Information Section */}
+            <div className="space-y-8">
+              <h2 className="text-xl font-semibold text-white">
+                Basic Information
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-gray-200">
+                      Companion Name *
+                    </Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
+                      placeholder="e.g., PhilosopherBot"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="avatar_url" className="text-gray-200">
+                      Avatar URL
+                    </Label>
+                    <Input
+                      id="avatar_url"
+                      value={formData.avatar_url}
+                      onChange={handleAvatarChange}
+                      className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
+                      placeholder="https://example.com/avatar.png"
+                      type="url"
+                    />
+                    <p className="text-xs text-gray-400">
+                      Leave blank for an auto-generated avatar
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="avatar_url" className="text-gray-200">
-                    Avatar URL
-                  </Label>
-                  <Input
-                    id="avatar_url"
-                    value={formData.avatar_url}
-                    onChange={handleAvatarChange}
-                    className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
-                    placeholder="https://example.com/avatar.png"
-                    type="url"
-                  />
-                  <p className="text-xs text-gray-400">
-                    Leave blank for an auto-generated avatar
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="chat_url" className="text-gray-200">
-                    Chat URL *
-                  </Label>
-                  <Input
-                    id="chat_url"
-                    value={formData.chat_url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, chat_url: e.target.value })
-                    }
-                    className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
-                    placeholder="https://example.com/chat"
-                    type="url"
-                    required
-                  />
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="description" className="text-gray-200">
+                      Description *
+                    </Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({ ...formData, description: e.target.value })
+                      }
+                      className="bg-black/50 border-green-500/20 text-white min-h-[120px] focus:border-green-500 transition-colors"
+                      placeholder="Describe your companion's personality, expertise, and what makes them unique..."
+                      required
+                    />
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-gray-200">
-                    Description *
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className="bg-black/50 border-green-500/20 text-white min-h-[120px] focus:border-green-500 transition-colors"
-                    placeholder="Describe your companion's personality, expertise, and what makes them unique..."
-                    required
-                  />
+            {/* Connection Details Section */}
+            <div className="space-y-8">
+              <h2 className="text-xl font-semibold text-white">
+                Connection Details
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="chat_url" className="text-gray-200">
+                      Chat URL *
+                    </Label>
+                    <Input
+                      id="chat_url"
+                      value={formData.chat_url}
+                      onChange={(e) =>
+                        setFormData({ ...formData, chat_url: e.target.value })
+                      }
+                      className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
+                      placeholder="https://example.com/chat"
+                      type="url"
+                      required
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="tags" className="text-gray-200">
-                    Tags *
-                  </Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags}
-                    onChange={(e) =>
-                      setFormData({ ...formData, tags: e.target.value })
-                    }
-                    className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
-                    placeholder="e.g., Philosophy, Science, Art (comma-separated)"
-                    required
-                  />
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="tags" className="text-gray-200">
+                      Tags *
+                    </Label>
+                    <Input
+                      id="tags"
+                      value={formData.tags}
+                      onChange={(e) =>
+                        setFormData({ ...formData, tags: e.target.value })
+                      }
+                      className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
+                      placeholder="e.g., Philosophy, Science, Art (comma-separated)"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             </div>
