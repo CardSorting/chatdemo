@@ -1,15 +1,7 @@
 import { supabase } from "./supabase";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
-
-export type Profile = {
-  id: string;
-  email: string;
-  full_name: string | null;
-  role: "admin" | "user";
-  created_at: string;
-  updated_at: string;
-};
+import { Profile } from "@/services/profile/profileTypes";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -21,7 +13,7 @@ export const useAuth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile(session.user.id).catch(console.error);
       } else {
         setLoading(false);
       }
@@ -33,7 +25,7 @@ export const useAuth = () => {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile(session.user.id).catch(console.error);
       } else {
         setProfile(null);
         setLoading(false);
@@ -43,7 +35,7 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string): Promise<void> => {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -51,13 +43,32 @@ export const useAuth = () => {
         .eq("id", userId)
         .single();
 
-      if (error) throw error;
-      setProfile(data);
+      if (error) {
+        // If profile doesn't exist, create it
+        if (error.code === "PGRST116") {
+          await createProfile(userId);
+          return fetchProfile(userId);
+        }
+        throw error;
+      }
+      setProfile(data as Profile);
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const createProfile = async (userId: string): Promise<void> => {
+    const { error } = await supabase.from("profiles").insert({
+      id: userId,
+      role: "user",
+      email: user?.email,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    if (error) throw error;
   };
 
   return {

@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Home from "./components/home";
 import MainNav from "./components/layout/MainNav";
 import LoginPage from "./components/auth/LoginPage";
+import RegisterPage from "./components/auth/RegisterPage";
 import UserProfile from "./components/user/UserProfile";
 import ExplorePage from "./components/explore/ExplorePage";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -30,6 +31,7 @@ function App() {
           <Route path="/submit" element={<SubmitCompanion />} />
           <Route path="/chat/:companionId" element={<CompanionChat />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/user/:userId" element={<UserProfile />} />
         </Routes>
       </div>
