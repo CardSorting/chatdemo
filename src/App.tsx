@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import Home from "./components/home";
+import UserProfile from "./components/user/UserProfile";
 import ExplorePage from "./components/explore/ExplorePage";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminLoginPage from "./components/admin/AdminLoginPage";
@@ -26,6 +27,7 @@ function App() {
           </Route>
           <Route path="/submit" element={<SubmitCompanion />} />
           <Route path="/chat/:companionId" element={<CompanionChat />} />
+          <Route path="/user/:userId" element={<UserProfile />} />
         </Routes>
         {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
       </>
