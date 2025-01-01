@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
-import { ProfileFormData, ProfileUpdateResponse } from "@/types/profile";
+import { useAuth } from "../lib/auth";
+import { supabase } from "../lib/supabase";
+import { ProfileFormData, ProfileUpdateResponse } from "../types/profile";
 
 export const useProfileSettings = () => {
   const { user, profile } = useAuth();
@@ -37,20 +37,32 @@ export const useProfileSettings = () => {
     setSuccess("");
 
     try {
+      console.log("Starting profile update...");
+      console.log("Form data:", formData);
+      console.log("Current profile:", profile);
+
       // Check if username is already taken
       if (formData.username !== profile?.username) {
-        const { data: existingUser } = await supabase
+        console.log("Checking username availability...");
+        const { data: existingUser, error: usernameError } = await supabase
           .from("profiles")
           .select("username")
           .eq("username", formData.username)
           .single();
 
+        if (usernameError) {
+          console.error("Username check error:", usernameError);
+          throw usernameError;
+        }
+
         if (existingUser) {
+          console.log("Username is already taken");
           throw new Error("Username is already taken");
         }
       }
 
-      const { error } = await supabase
+      console.log("Updating profile in database...");
+      const { data, error: updateError } = await supabase
         .from("profiles")
         .update({
           full_name: formData.fullName,
@@ -63,15 +75,21 @@ export const useProfileSettings = () => {
           theme: formData.theme,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", user.id);
+        .eq("id", user.id)
+        .select();
 
-      if (error) throw error;
+      if (updateError) {
+        console.error("Supabase update error:", updateError);
+        throw updateError;
+      }
 
+      console.log("Profile update successful:", data);
       setSuccess("Profile updated successfully!");
       setTimeout(() => setSuccess(""), 3000);
 
       return { success: true };
     } catch (error) {
+      console.error("Profile update failed:", error);
       const errorMessage = error.message || "Failed to update profile";
       setError(errorMessage);
       return { success: false, error: errorMessage };
