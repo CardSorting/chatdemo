@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 import { ProfileFormData, ProfileUpdateResponse } from "../types/profile";
@@ -20,6 +20,21 @@ export const useProfileSettings = () => {
     theme: profile?.theme || "dark",
   });
 
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        fullName: profile.full_name || "",
+        username: profile.username || "",
+        bio: profile.bio || "",
+        website: profile.website || "",
+        avatarUrl: profile.avatar_url || "",
+        emailNotifications: profile.email_notifications || false,
+        profileVisibility: profile.visibility || "public",
+        theme: profile.theme || "dark",
+      });
+    }
+  }, [profile]);
+
   const handleFormDataChange = (key: keyof ProfileFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
@@ -37,59 +52,59 @@ export const useProfileSettings = () => {
     setSuccess("");
 
     try {
-      console.log("Starting profile update...");
-      console.log("Form data:", formData);
-      console.log("Current profile:", profile);
+      // Validate required fields
+      if (!formData.fullName.trim() || !formData.username.trim()) {
+        throw new Error("Full name and username are required");
+      }
 
       // Check if username is already taken
       if (formData.username !== profile?.username) {
-        console.log("Checking username availability...");
         const { data: existingUser, error: usernameError } = await supabase
           .from("profiles")
           .select("username")
           .eq("username", formData.username)
           .single();
 
-        if (usernameError) {
-          console.error("Username check error:", usernameError);
-          throw usernameError;
+        if (usernameError && usernameError.code !== "PGRST116") {
+          throw new Error("Error checking username availability");
         }
 
         if (existingUser) {
-          console.log("Username is already taken");
           throw new Error("Username is already taken");
         }
       }
 
-      console.log("Updating profile in database...");
+      // Prepare update data
+      const updateData = {
+        full_name: formData.fullName.trim(),
+        username: formData.username.toLowerCase().trim(),
+        bio: formData.bio?.trim() || null,
+        website: formData.website?.trim() || null,
+        avatar_url: formData.avatarUrl?.trim() || null,
+        email_notifications: formData.emailNotifications,
+        visibility: formData.profileVisibility,
+        theme: formData.theme,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Update profile in database
       const { data, error: updateError } = await supabase
         .from("profiles")
-        .update({
-          full_name: formData.fullName,
-          username: formData.username.toLowerCase(),
-          bio: formData.bio,
-          website: formData.website,
-          avatar_url: formData.avatarUrl,
-          email_notifications: formData.emailNotifications,
-          visibility: formData.profileVisibility,
-          theme: formData.theme,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq("id", user.id)
         .select();
 
       if (updateError) {
-        console.error("Supabase update error:", updateError);
-        throw updateError;
+        throw new Error(updateError.message || "Failed to update profile");
       }
 
-      console.log("Profile update successful:", data);
-      setSuccess("Profile updated successfully!");
-      setTimeout(() => setSuccess(""), 3000);
+      if (!data) {
+        throw new Error("No data returned from profile update");
+      }
 
+      setSuccess("Profile updated successfully!");
       return { success: true };
     } catch (error) {
-      console.error("Profile update failed:", error);
       const errorMessage = error.message || "Failed to update profile";
       setError(errorMessage);
       return { success: false, error: errorMessage };

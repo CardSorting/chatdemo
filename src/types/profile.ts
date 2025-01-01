@@ -23,6 +23,17 @@ export interface ProfileFormData {
   theme: "dark" | "light" | "system";
 }
 
+export interface ProfileUpdateData {
+  full_name: string;
+  username: string;
+  bio?: string;
+  website?: string;
+  avatar_url?: string;
+  email_notifications?: boolean;
+  visibility?: "public" | "private" | "followers";
+  theme?: "dark" | "light" | "system";
+}
+
 export interface ProfileUpdateResponse {
   success: boolean;
   error?: string;
