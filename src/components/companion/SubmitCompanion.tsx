@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -7,6 +7,7 @@ import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import { useAuth } from "../../lib/auth";
 import { createCompanion } from "../../lib/companions";
+import { supabase } from "../../lib/supabase";
 import {
   Bot,
   Loader2,
@@ -16,13 +17,16 @@ import {
   Tags,
   Link2,
   AlertCircle,
+  Image,
 } from "lucide-react";
 
 const SubmitCompanion = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState("");
 
   const [formData, setFormData] = useState({
@@ -68,10 +72,46 @@ const SubmitCompanion = () => {
     }
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
-    setFormData({ ...formData, avatar_url: url });
-    setPreviewUrl(url);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      // Ensure the avatars bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      if (!buckets?.some(b => b.name === 'avatars')) {
+        await supabase.storage.createBucket('avatars', {
+          public: true,
+          allowedMimeTypes: ['image/*'],
+          fileSizeLimit: 1024 * 1024 * 5 // 5MB
+        });
+      }
+
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+
+      // Upload file to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(data.path);
+
+      setFormData({ ...formData, avatar_url: urlData.publicUrl });
+      setPreviewUrl(urlData.publicUrl);
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      setError(error.message || "Failed to upload avatar");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const getPreviewImage = () => {
@@ -119,7 +159,7 @@ const SubmitCompanion = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Upload className="w-4 h-4 text-green-500" />
-                Provide a clear avatar URL or let us generate one
+                Upload an avatar image (JPG/PNG, max 5MB)
               </li>
               <li className="flex items-center gap-2">
                 <Tags className="w-4 h-4 text-green-500" />
@@ -159,62 +199,74 @@ const SubmitCompanion = () => {
               </div>
             </div>
 
-            {/* Basic Information Section */}
+            {/* Companion Details Section */}
             <div className="space-y-8">
               <h2 className="text-xl font-semibold text-white">
-                Basic Information
+                Companion Details
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-gray-200">
-                      Companion Name *
-                    </Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
-                      placeholder="e.g., PhilosopherBot"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="avatar_url" className="text-gray-200">
-                      Avatar URL
-                    </Label>
-                    <Input
-                      id="avatar_url"
-                      value={formData.avatar_url}
-                      onChange={handleAvatarChange}
-                      className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
-                      placeholder="https://example.com/avatar.png"
-                      type="url"
-                    />
-                    <p className="text-xs text-gray-400">
-                      Leave blank for an auto-generated avatar
-                    </p>
-                  </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-gray-200">
+                    Companion Name *
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
+                    placeholder="e.g., PhilosopherBot"
+                    required
+                  />
                 </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="description" className="text-gray-200">
-                      Description *
-                    </Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                      }
-                      className="bg-black/50 border-green-500/20 text-white min-h-[120px] focus:border-green-500 transition-colors"
-                      placeholder="Describe your companion's personality, expertise, and what makes them unique..."
-                      required
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-gray-200">
+                    Description *
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    className="bg-black/50 border-green-500/20 text-white min-h-[120px] focus:border-green-500 transition-colors"
+                    placeholder="Describe your companion's personality, expertise, and what makes them unique..."
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="avatar" className="text-gray-200">
+                    Avatar Image
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="file"
+                      id="avatar"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      accept="image/*"
                     />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="bg-black/50 border-green-500/20 text-white hover:bg-black/70 hover:border-green-500/40"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Image className="mr-2 h-4 w-4" />
+                      )}
+                      {uploading ? "Uploading..." : "Upload Avatar"}
+                    </Button>
+                    <p className="text-xs text-gray-400">
+                      JPG/PNG, max 5MB
+                    </p>
                   </div>
                 </div>
               </div>
@@ -225,42 +277,38 @@ const SubmitCompanion = () => {
               <h2 className="text-xl font-semibold text-white">
                 Connection Details
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="chat_url" className="text-gray-200">
-                      Chat URL *
-                    </Label>
-                    <Input
-                      id="chat_url"
-                      value={formData.chat_url}
-                      onChange={(e) =>
-                        setFormData({ ...formData, chat_url: e.target.value })
-                      }
-                      className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
-                      placeholder="https://example.com/chat"
-                      type="url"
-                      required
-                    />
-                  </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="chat_url" className="text-gray-200">
+                    Chat URL *
+                  </Label>
+                  <Input
+                    id="chat_url"
+                    value={formData.chat_url}
+                    onChange={(e) =>
+                      setFormData({ ...formData, chat_url: e.target.value })
+                    }
+                    className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
+                    placeholder="https://example.com/chat"
+                    type="url"
+                    required
+                  />
                 </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="tags" className="text-gray-200">
-                      Tags *
-                    </Label>
-                    <Input
-                      id="tags"
-                      value={formData.tags}
-                      onChange={(e) =>
-                        setFormData({ ...formData, tags: e.target.value })
-                      }
-                      className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
-                      placeholder="e.g., Philosophy, Science, Art (comma-separated)"
-                      required
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tags" className="text-gray-200">
+                    Tags *
+                  </Label>
+                  <Input
+                    id="tags"
+                    value={formData.tags}
+                    onChange={(e) =>
+                      setFormData({ ...formData, tags: e.target.value })
+                    }
+                    className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
+                    placeholder="e.g., Philosophy, Science, Art (comma-separated)"
+                    required
+                  />
                 </div>
               </div>
             </div>
@@ -279,7 +327,7 @@ const SubmitCompanion = () => {
               <Button
                 type="submit"
                 className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-8"
-                disabled={loading}
+                disabled={loading || uploading}
               >
                 {loading ? (
                   <>
