@@ -1,89 +1,67 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-import { useProfileSettings } from "@/hooks/useProfileSettings";
+import React, { useState } from "react";
+import { useProfileSettings } from "../../hooks/useProfileSettings";
 import ProfileInformationForm from "./settings/ProfileInformationForm";
-import PreferencesForm from "./settings/PreferencesForm";
 import AccountActions from "./settings/AccountActions";
+import { Button } from "../ui/button";
+import { useToast } from "../ui/use-toast";
 
 const UserSettings = () => {
-  const navigate = useNavigate();
   const {
     formData,
-    loading,
-    error,
-    success,
-    handleFormDataChange,
     handleUsernameChange,
+    handleFormDataChange,
     updateProfile,
+    loading,
   } = useProfileSettings();
+  const [error, setError] = useState("");
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile();
-  };
-
-  const handleDeleteAccount = async () => {
+    setError("");
+    
     try {
-      const { error } = await supabase.rpc("delete_user_account", {
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+      await updateProfile();
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
       });
-
-      if (error) throw error;
-
-      await supabase.auth.signOut();
-      navigate("/");
-    } catch (error) {
-      console.error("Error deleting account:", error);
+    } catch (err) {
+      setError(err.message || "Failed to update profile");
+      toast({
+        title: "Update Failed",
+        description: error,
+        variant: "destructive",
+      });
     }
   };
 
+  const handleDeleteAccount = async () => {
+    // Implement account deletion logic
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <ProfileInformationForm
-        formData={formData}
-        onUsernameChange={handleUsernameChange}
-        onFormDataChange={handleFormDataChange}
-      />
+    <div className="min-h-screen w-full bg-black">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
+        
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <ProfileInformationForm
+            formData={formData}
+            onUsernameChange={handleUsernameChange}
+            onFormDataChange={handleFormDataChange}
+          />
 
-      <PreferencesForm
-        formData={formData}
-        onFormDataChange={handleFormDataChange}
-      />
+          <AccountActions onDeleteAccount={handleDeleteAccount} />
 
-      <AccountActions onDeleteAccount={handleDeleteAccount} />
-
-      {/* Status Messages */}
-      {error && (
-        <div className="text-red-500 text-sm bg-red-500/10 border border-red-500/20 rounded-md p-3">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="text-green-500 text-sm bg-green-500/10 border border-green-500/20 rounded-md p-3">
-          {success}
-        </div>
-      )}
-
-      {/* Save Button */}
-      <Button
-        type="submit"
-        className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
-        disabled={loading}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Saving...
-          </>
-        ) : (
-          "Save Changes"
-        )}
-      </Button>
-    </form>
+          <div className="flex justify-end">
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

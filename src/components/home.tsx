@@ -2,7 +2,6 @@ import React from "react";
 import MainNav from "./layout/MainNav";
 import HeroSection from "./landing/HeroSection";
 import ValueProps from "./landing/ValueProps";
-import TopCreators from "./landing/TopCreators";
 import Footer from "./landing/Footer";
 import ChatDemo from "./landing/ChatDemo";
 import FeaturedCompanions from "./landing/FeaturedCompanions";
@@ -50,11 +49,6 @@ const Home = () => {
         {/* Value Props Section */}
         <div className="relative z-20">
           <ValueProps />
-        </div>
-
-        {/* Top Creators Section */}
-        <div className="relative z-20">
-          <TopCreators />
         </div>
       </main>
 

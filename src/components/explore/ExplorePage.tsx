@@ -1,5 +1,5 @@
 import React from "react";
-import Header from "../landing/Header";
+import MainNav from "../layout/MainNav";
 import Gallery from "../landing/Gallery";
 import Footer from "../landing/Footer";
 
@@ -13,7 +13,7 @@ const ExplorePage = () => {
       <div className="fixed inset-0 bg-[linear-gradient(transparent_1px,_#000_1px),linear-gradient(90deg,transparent_1px,_#000_1px)] bg-[size:30px_30px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-30 pointer-events-none" />
 
       {/* Header */}
-      <Header />
+      <MainNav />
 
       {/* Main content */}
       <main className="relative z-10 pt-16">
