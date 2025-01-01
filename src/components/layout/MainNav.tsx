@@ -18,14 +18,19 @@ import {
   User,
   LogIn,
 } from "lucide-react";
-import { useAuth, signOut } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 
 const MainNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-green-500/10">
@@ -114,7 +119,7 @@ const MainNav = () => {
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => signOut()}>
+                        <DropdownMenuItem onClick={handleSignOut}>
                           <LogOut className="mr-2 h-4 w-4" />
                           Sign Out
                         </DropdownMenuItem>

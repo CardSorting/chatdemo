@@ -37,9 +37,11 @@ const defaultFeatures: Feature[] = [
   },
 ];
 
-const FeatureGrid = ({ features = defaultFeatures }: FeatureGridProps) => {
+const FeatureGrid: React.FC<FeatureGridProps> = ({
+  features = defaultFeatures,
+}) => {
   return (
-    <section className="w-full min-h-[600px] bg-black p-8 md:p-16 relative overflow-hidden">
+    <div className="w-full min-h-[600px] bg-black p-8 md:p-16 relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-matrix-grid bg-matrix-cell opacity-5" />
 
@@ -91,12 +93,8 @@ const FeatureGrid = ({ features = defaultFeatures }: FeatureGridProps) => {
             </Card>
           ))}
         </div>
-
-        {/* Decorative Elements */}
-        <div className="absolute -top-20 -left-20 w-40 h-40 bg-green-500/20 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl animate-pulse-slow" />
       </div>
-    </section>
+    </div>
   );
 };
 

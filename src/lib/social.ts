@@ -18,10 +18,13 @@ export const getUserSocialStats = async (
 };
 
 export const followUser = async (userId: string) => {
-  const { error } = await supabase.from("followers").insert({
-    follower_id: (await supabase.auth.getUser()).data.user?.id,
-    following_id: userId,
-  });
+  const { error } = await supabase
+    .from("followers")
+    .insert({
+      follower_id: (await supabase.auth.getUser()).data.user?.id,
+      following_id: userId,
+    })
+    .select();
 
   if (error) throw error;
 };
@@ -33,20 +36,24 @@ export const unfollowUser = async (userId: string) => {
     .match({
       follower_id: (await supabase.auth.getUser()).data.user?.id,
       following_id: userId,
-    });
+    })
+    .select();
 
   if (error) throw error;
 };
 
 export const isFollowing = async (userId: string): Promise<boolean> => {
+  const currentUser = await supabase.auth.getUser();
+  if (!currentUser.data.user) return false;
+
   const { data, error } = await supabase
     .from("followers")
-    .select("*")
+    .select()
     .match({
-      follower_id: (await supabase.auth.getUser()).data.user?.id,
+      follower_id: currentUser.data.user.id,
       following_id: userId,
     })
-    .single();
+    .maybeSingle();
 
   if (error && error.code !== "PGRST116") throw error;
   return !!data;

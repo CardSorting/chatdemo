@@ -13,29 +13,32 @@ import SettingsPage from "./components/admin/SettingsPage";
 import SubmitCompanion from "./components/companion/SubmitCompanion";
 import CompanionsPage from "./components/admin/CompanionsPage";
 import CompanionChat from "./components/companion/CompanionChat";
+import { AuthProvider } from "./components/providers/AuthProvider";
 
 function App() {
   return (
-    <Suspense fallback={<p>Loading...</p>}>
-      <div className="min-h-screen bg-black">
-        <MainNav />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/explore" element={<ExplorePage />} />
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<UsersPage />} />
-            <Route path="companions" element={<CompanionsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
-          <Route path="/submit" element={<SubmitCompanion />} />
-          <Route path="/chat/:companionId" element={<CompanionChat />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/user/:userId" element={<UserProfile />} />
-        </Routes>
-      </div>
-    </Suspense>
+    <AuthProvider>
+      <Suspense fallback={<p>Loading...</p>}>
+        <div className="min-h-screen bg-black">
+          <MainNav />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<UsersPage />} />
+              <Route path="companions" element={<CompanionsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
+            <Route path="/submit" element={<SubmitCompanion />} />
+            <Route path="/chat/:companionId" element={<CompanionChat />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/user/:userId" element={<UserProfile />} />
+          </Routes>
+        </div>
+      </Suspense>
+    </AuthProvider>
   );
 }
 
