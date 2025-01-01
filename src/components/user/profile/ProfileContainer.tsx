@@ -1,9 +1,9 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
-import { useProfile } from "@/hooks/useProfile";
-import { Card } from "@/components/ui/card";
-import LoadingSpinner from "@/components/ui/loading-spinner";
+import { useAuth } from "../../../hooks/useAuth";
+import { useProfile } from "../../../hooks/useProfile";
+import { Card } from "../../ui/card";
+import LoadingSpinner from "../../ui/loading-spinner";
 import ProfileHeader from "./ProfileHeader";
 import ProfileTabs from "./ProfileTabs";
 import SocialStats from "./SocialStats";
@@ -11,6 +11,12 @@ import SocialStats from "./SocialStats";
 const ProfileContainer = () => {
   const { userId } = useParams();
   const { user: currentUser } = useAuth();
+  const {
+    profile,
+    loading,
+    error,
+    refreshProfile,
+  } = useProfile(userId);
 
   if (!userId) {
     return (
@@ -21,19 +27,6 @@ const ProfileContainer = () => {
       </div>
     );
   }
-
-  const {
-    profile,
-    stats,
-    socialStats,
-    companions,
-    achievements,
-    loading,
-    error,
-    refreshProfile,
-  } = useProfile(userId);
-
-  const isOwnProfile = currentUser?.id === userId;
 
   if (loading) {
     return (
@@ -52,6 +45,8 @@ const ProfileContainer = () => {
       </div>
     );
   }
+
+  const isOwnProfile = currentUser?.id === userId;
 
   // Create default stats if none exist
   const defaultStats = {
@@ -76,14 +71,14 @@ const ProfileContainer = () => {
       <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjEiIGZpbGw9InJnYmEoMCwyNTUsMCwwLjEpIi8+PC9nPjwvc3ZnPg==')] opacity-20 pointer-events-none animate-matrix-rain" />
 
       <div className="relative">
-        <ProfileHeader profile={profile} stats={stats || defaultStats} />
+        <ProfileHeader profile={profile} stats={defaultStats} />
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
           {/* Social Stats Section */}
           <div className="relative">
             <SocialStats
               userId={userId}
-              stats={socialStats || defaultSocialStats}
+              stats={defaultSocialStats}
               onStatsChange={refreshProfile}
             />
           </div>
@@ -91,9 +86,9 @@ const ProfileContainer = () => {
           {/* Tabs Section */}
           <div className="relative mt-12">
             <ProfileTabs
-              companions={companions}
-              achievements={achievements}
-              stats={stats || defaultStats}
+              companions={[]}
+              achievements={[]}
+              stats={defaultStats}
               isOwnProfile={isOwnProfile}
             />
           </div>

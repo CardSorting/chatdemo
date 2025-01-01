@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Profile } from "../types/profile";
+import { useToast } from "../components/ui/use-toast";
 
 export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
+  const { toast } = useToast();
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -20,6 +23,7 @@ export const useAuth = () => {
       setProfile(data);
     } catch (error) {
       console.error("Error fetching profile:", error);
+      setAuthError("Failed to load profile");
     }
   };
 
@@ -30,49 +34,98 @@ export const useAuth = () => {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.id) {
-        fetchProfile(session.user.id);
-      }
-      setLoading(false);
-    });
+    let authSubscription: { unsubscribe: () => void } | null = null;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+
         setSession(session);
         setUser(session?.user ?? null);
+        
         if (session?.user?.id) {
           await fetchProfile(session.user.id);
         }
+
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (_event, session) => {
+            setSession(session);
+            setUser(session?.user ?? null);
+            if (session?.user?.id) {
+              await fetchProfile(session.user.id);
+            }
+          }
+        );
+        authSubscription = { unsubscribe: subscription.unsubscribe };
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        setAuthError("Failed to initialize authentication");
+        toast({
+          title: "Authentication Error",
+          description: "Failed to initialize authentication",
+          variant: "destructive",
+        });
+      } finally {
         setLoading(false);
       }
-    );
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    setLoading(true);
+    setAuthError("");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    if (error) {
-      console.error("Error signing in:", error.message);
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error signing in:", error);
+      setAuthError(error.message);
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error signing out:", error.message);
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUser(null);
+      setProfile(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
+      setAuthError(error.message);
+      toast({
+        title: "Logout Failed",
+        description: error.message,
+        variant: "destructive",
+      });
       throw error;
+    } finally {
+      setLoading(false);
     }
-    setUser(null);
-    setProfile(null);
   };
 
   return { 
@@ -80,6 +133,7 @@ export const useAuth = () => {
     session, 
     profile,
     loading,
+    authError,
     signIn, 
     signOut,
     refreshProfile

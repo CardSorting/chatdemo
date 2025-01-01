@@ -5,9 +5,11 @@ export interface Profile {
   bio: string;
   website: string;
   avatar_url: string;
+  email: string;
+  role: "user" | "admin";
   email_notifications: boolean;
-  visibility: "public" | "private" | "followers";
-  theme: "dark" | "light" | "system";
+  visibility: ProfileVisibility;
+  theme: Theme;
   created_at: string;
   updated_at: string;
 }
@@ -19,8 +21,8 @@ export interface ProfileFormData {
   website: string;
   avatarUrl: string;
   emailNotifications: boolean;
-  profileVisibility: "public" | "private" | "followers";
-  theme: "dark" | "light" | "system";
+  profileVisibility: ProfileVisibility;
+  theme: Theme;
 }
 
 export interface ProfileUpdateData {
@@ -30,11 +32,14 @@ export interface ProfileUpdateData {
   website?: string;
   avatar_url?: string;
   email_notifications?: boolean;
-  visibility?: "public" | "private" | "followers";
-  theme?: "dark" | "light" | "system";
+  visibility?: ProfileVisibility;
+  theme?: Theme;
 }
 
 export interface ProfileUpdateResponse {
   success: boolean;
   error?: string;
 }
+
+export type ProfileVisibility = "public" | "private" | "followers";
+export type Theme = "dark" | "light" | "system";

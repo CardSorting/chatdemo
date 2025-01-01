@@ -1,23 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { useToast } from "../ui/use-toast";
 import { useProfile } from "../../hooks/useProfile";
 import ProfileInformationForm from "./settings/ProfileInformationForm";
 import AccountActions from "./settings/AccountActions";
+import { ProfileVisibility, Theme } from "../../types/profile";
 
 const UserSettings = () => {
   const { profile, loading, error, updateProfile } = useProfile();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    full_name: profile?.full_name || "",
-    username: profile?.username || "",
-    bio: profile?.bio || "",
-    website: profile?.website || "",
-    avatar_url: profile?.avatar_url || "",
-    email_notifications: profile?.email_notifications || false,
-    visibility: profile?.visibility || "public",
-    theme: profile?.theme || "dark",
+    full_name: "",
+    username: "",
+    bio: "",
+    website: "",
+    avatar_url: "",
+    email_notifications: false,
+    visibility: "public" as ProfileVisibility,
+    theme: "dark" as Theme,
   });
+
+  // Initialize form data when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || "",
+        username: profile.username || "",
+        bio: profile.bio || "",
+        website: profile.website || "",
+        avatar_url: profile.avatar_url || "",
+        email_notifications: profile.email_notifications || false,
+        visibility: profile.visibility || "public",
+        theme: profile.theme || "dark",
+      });
+    }
+  }, [profile]);
 
   const handleFormDataChange = (key: string, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -61,6 +78,20 @@ const UserSettings = () => {
     profileVisibility: formData.visibility,
     theme: formData.theme,
   };
+
+  if (error === "Profile not found") {
+    return (
+      <div className="min-h-screen w-full bg-black flex items-center justify-center">
+        <div className="text-white text-center">
+          <h1 className="text-2xl font-bold mb-4">Profile Not Found</h1>
+          <p className="mb-4">We couldn't find your profile. Please try logging in again.</p>
+          <Button onClick={() => window.location.href = "/login"}>
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-black">

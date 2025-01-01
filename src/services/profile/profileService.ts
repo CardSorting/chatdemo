@@ -10,11 +10,21 @@ class ProfileService {
         .eq("id", userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "PGRST116") { // No rows found
+          throw new Error("Profile not found");
+        }
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error("Profile not found");
+      }
+
       return data;
     } catch (error) {
       console.error("Error fetching profile:", error);
-      return null;
+      throw error;
     }
   }
 
