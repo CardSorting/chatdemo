@@ -19,6 +19,17 @@ export interface Companion {
   moderated_by?: string;
 }
 
+export interface CompanionAnalytics {
+  id: string;
+  name: string;
+  creator_id: string;
+  unique_likes: number;
+  unique_chatters: number;
+  unique_viewers: number;
+  total_messages: number;
+  total_views: number;
+}
+
 export const createCompanion = async (
   companion: Omit<
     Companion,
@@ -89,4 +100,60 @@ export const moderateCompanion = async (
   };
 
   return updateCompanion(id, updates);
+};
+
+// Stats tracking functions
+export const trackCompanionAction = async (
+  companionId: string,
+  actionType: "like" | "chat" | "view",
+) => {
+  const { error } = await supabase.from("companion_stats").insert({
+    companion_id: companionId,
+    action_type: actionType,
+  });
+
+  if (error) throw error;
+};
+
+export const isCompanionLiked = async (companionId: string) => {
+  const { data, error } = await supabase
+    .from("companion_stats")
+    .select("id")
+    .eq("companion_id", companionId)
+    .eq("action_type", "like")
+    .eq("user_id", supabase.auth.getUser())
+    .single();
+
+  if (error && error.code !== "PGRST116") throw error;
+  return !!data;
+};
+
+export const toggleCompanionLike = async (companionId: string) => {
+  const isLiked = await isCompanionLiked(companionId);
+
+  if (isLiked) {
+    const { error } = await supabase
+      .from("companion_stats")
+      .delete()
+      .eq("companion_id", companionId)
+      .eq("action_type", "like")
+      .eq("user_id", supabase.auth.getUser());
+
+    if (error) throw error;
+  } else {
+    await trackCompanionAction(companionId, "like");
+  }
+
+  return !isLiked;
+};
+
+export const fetchCompanionAnalytics = async (companionId: string) => {
+  const { data, error } = await supabase
+    .from("companion_analytics")
+    .select("*")
+    .eq("id", companionId)
+    .single();
+
+  if (error) throw error;
+  return data as CompanionAnalytics;
 };

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import Home from "./components/home";
+import ExplorePage from "./components/explore/ExplorePage";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminLoginPage from "./components/admin/AdminLoginPage";
 import UsersPage from "./components/admin/UsersPage";
@@ -16,6 +17,7 @@ function App() {
       <>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/explore" element={<ExplorePage />} />
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<UsersPage />} />

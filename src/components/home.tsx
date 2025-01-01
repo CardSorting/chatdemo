@@ -1,12 +1,16 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "./landing/Header";
 import HeroSection from "./landing/HeroSection";
-import Gallery from "./landing/Gallery";
-import FeatureGrid from "./landing/FeatureGrid";
+import ValueProps from "./landing/ValueProps";
+import TopCreators from "./landing/TopCreators";
 import Footer from "./landing/Footer";
 import ChatDemo from "./landing/ChatDemo";
+import FeaturedCompanions from "./landing/FeaturedCompanions";
 
 const Home = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen w-full bg-black overflow-x-hidden">
       {/* Matrix-style background overlay with animated rain effect */}
@@ -41,14 +45,19 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Features Section */}
+        {/* Featured Companions Section */}
         <div className="relative z-20">
-          <FeatureGrid />
+          <FeaturedCompanions />
         </div>
 
-        {/* Gallery Section */}
+        {/* Value Props Section */}
         <div className="relative z-20">
-          <Gallery />
+          <ValueProps />
+        </div>
+
+        {/* Top Creators Section */}
+        <div className="relative z-20">
+          <TopCreators />
         </div>
       </main>
 
