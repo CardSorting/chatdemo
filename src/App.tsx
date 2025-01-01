@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { useRoutes, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Home from "./components/home";
 import MainNav from "./components/layout/MainNav";
 import LoginPage from "./components/auth/LoginPage";
@@ -12,7 +12,6 @@ import SettingsPage from "./components/admin/SettingsPage";
 import SubmitCompanion from "./components/companion/SubmitCompanion";
 import CompanionsPage from "./components/admin/CompanionsPage";
 import CompanionChat from "./components/companion/CompanionChat";
-import routes from "tempo-routes";
 
 function App() {
   return (
@@ -33,7 +32,6 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/user/:userId" element={<UserProfile />} />
         </Routes>
-        {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
       </div>
     </Suspense>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { ProfileService } from "@/services/profile/profileService";
+import { supabase } from "@/lib/supabase";
 import { Profile, ProfileStats } from "@/services/profile/profileTypes";
-import { SocialStats, getUserSocialStats } from "@/lib/social";
+import { SocialStats } from "@/lib/social";
 import { Companion } from "@/lib/companions";
 import { Achievement } from "@/lib/achievements";
 
@@ -30,39 +30,81 @@ export const useProfile = (userId: string): UseProfileReturn => {
       setLoading(true);
       setError(null);
 
-      const [
-        profileData,
-        statsData,
-        socialData,
-        companionsData,
-        achievementsData,
-      ] = await Promise.all([
-        ProfileService.getProfile(userId),
-        ProfileService.getProfileStats(userId),
-        getUserSocialStats(userId),
-        supabase
-          .from("companions")
-          .select("*")
-          .eq("creator_id", userId)
-          .eq("status", "approved"),
-        supabase.rpc("check_and_award_achievements", { user_id: userId }),
-      ]);
+      // Load profile
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
+      if (profileError) throw new Error("Failed to load profile");
       setProfile(profileData);
-      setStats(statsData);
-      setSocialStats(socialData);
-      setCompanions(companionsData.data || []);
-      setAchievements(achievementsData.data || []);
+
+      // Load stats
+      const { data: statsData, error: statsError } = await supabase
+        .rpc("get_user_stats", { user_id: userId })
+        .single();
+
+      if (statsError) {
+        console.error("Stats error:", statsError);
+        // Don't throw here, just set stats to null
+        setStats(null);
+      } else {
+        setStats(statsData);
+      }
+
+      // Load social stats
+      const { data: socialData, error: socialError } = await supabase.rpc(
+        "get_user_social_stats",
+        { user_id: userId },
+      );
+
+      if (socialError) {
+        console.error("Social stats error:", socialError);
+        // Don't throw here, just set socialStats to null
+        setSocialStats(null);
+      } else {
+        setSocialStats(socialData);
+      }
+
+      // Load companions
+      const { data: companionsData, error: companionsError } = await supabase
+        .from("companions")
+        .select("*")
+        .eq("creator_id", userId)
+        .eq("status", "approved");
+
+      if (companionsError) {
+        console.error("Companions error:", companionsError);
+        // Don't throw here, just set companions to empty array
+        setCompanions([]);
+      } else {
+        setCompanions(companionsData || []);
+      }
+
+      // Load achievements
+      const { data: achievementsData, error: achievementsError } =
+        await supabase.rpc("check_and_award_achievements", { user_id: userId });
+
+      if (achievementsError) {
+        console.error("Achievements error:", achievementsError);
+        // Don't throw here, just set achievements to empty array
+        setAchievements([]);
+      } else {
+        setAchievements(achievementsData || []);
+      }
     } catch (err) {
       console.error("Error loading profile:", err);
-      setError("Failed to load profile");
+      setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadProfile();
+    if (userId) {
+      loadProfile();
+    }
   }, [userId]);
 
   return {

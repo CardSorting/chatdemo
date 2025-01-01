@@ -1,4 +1,5 @@
 import React from "react";
+import { Loader2 } from "lucide-react";
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -7,8 +8,8 @@ interface LoadingSpinnerProps {
 const LoadingSpinner = ({ message = "Loading..." }: LoadingSpinnerProps) => {
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
-      <p className="text-green-500 animate-pulse">{message}</p>
+      <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+      <p className="text-green-500">{message}</p>
     </div>
   );
 };
