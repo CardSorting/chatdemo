@@ -14,3 +14,21 @@ export const getAvailableFilters = async () => {
     categories
   };
 };
+
+export const getCompanionStats = async (companionId: string) => {
+  const { data, error } = await supabase
+    .from('companions')
+    .select('likes_count, messages_count')
+    .eq('id', companionId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching companion stats:', error);
+    throw error;
+  }
+
+  return {
+    likesCount: data.likes_count,
+    messagesCount: data.messages_count
+  };
+};

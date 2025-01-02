@@ -1,14 +1,22 @@
 import React from "react";
-import { Companion } from "../../lib/companions";
-import { Button } from "../ui/button";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Card } from "../ui/card";
+import { Button } from "../ui/button";
+import { Companion } from "../../lib/companions";
+import { getCompanionStats } from "../../services/companion/companionService";
+import { Skeleton } from "../ui/skeleton";
 
 interface CompanionCardProps {
   companion: Companion;
 }
 
 const CompanionCard = ({ companion }: CompanionCardProps) => {
+  const { data: stats, isLoading, isError } = useQuery({
+    queryKey: ['companionStats', companion.id],
+    queryFn: () => getCompanionStats(companion.id)
+  });
+
   return (
     <Card className="group relative p-6 bg-black/50 backdrop-blur-sm border-green-500/20 hover:border-green-500/40 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_15px_rgba(34,197,94,0.2)] hover:-translate-y-1">
       {/* Ambient glow effect */}
@@ -50,19 +58,35 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-full border border-green-500/20 group-hover:border-green-500/30 transition-colors">
-              <span className="text-sm">❤️</span>
+              {isLoading ? (
+                <Skeleton className="h-4 w-4 rounded-full" />
+              ) : (
+                <span className="text-sm">❤️</span>
+              )}
             </div>
-            <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-              {companion.likes_count}
-            </span>
+            {isLoading ? (
+              <Skeleton className="h-4 w-8" />
+            ) : (
+              <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                {isError ? 'Error' : stats?.likesCount}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-full border border-green-500/20 group-hover:border-green-500/30 transition-colors">
-              <span className="text-sm">💬</span>
+              {isLoading ? (
+                <Skeleton className="h-4 w-4 rounded-full" />
+              ) : (
+                <span className="text-sm">💬</span>
+              )}
             </div>
-            <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-              {companion.messages_count}
-            </span>
+            {isLoading ? (
+              <Skeleton className="h-4 w-8" />
+            ) : (
+              <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                {isError ? 'Error' : stats?.messagesCount}
+              </span>
+            )}
           </div>
         </div>
         <Button
