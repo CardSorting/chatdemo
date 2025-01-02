@@ -103,7 +103,13 @@ export const bookmarkCompanion = async (companionId: string) => {
   }
 };
 
-export const getBookmarkedCompanions = async () => {
+export const getBookmarkedCompanions = async ({
+  page = 1,
+  pageSize = 10,
+  search = "",
+  filters = [],
+  sort = "recent"
+}) => {
   try {
     const {
       data: { user },
@@ -113,25 +119,60 @@ export const getBookmarkedCompanions = async () => {
     if (userError) throw userError;
     if (!user) throw new Error('No user found');
 
-    const { data, error } = await supabase
+    const offset = (page - 1) * pageSize;
+
+    // Get total count of bookmarks
+    const { count: totalCount } = await supabase
       .from('bookmarks')
-      .select('companion_id')
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
-    if (error) throw error;
+    // Get bookmarked companion IDs
+    let query = supabase
+      .from('bookmarks')
+      .select('companion_id, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: sort === 'recent' ? false : true })
+      .range(offset, offset + pageSize - 1);
 
-    const companionIds = data.map(b => b.companion_id);
+    const { data: bookmarks, error: bookmarksError } = await query;
 
-    if (companionIds.length === 0) return [];
+    if (bookmarksError) throw bookmarksError;
 
-    const { data: companions, error: companionsError } = await supabase
+    const companionIds = bookmarks.map(b => b.companion_id);
+
+    if (companionIds.length === 0) {
+      return {
+        data: [],
+        hasMore: false
+      };
+    }
+
+    // Get companion details
+    let companionsQuery = supabase
       .from('companions')
       .select('*')
       .in('id', companionIds);
 
+    if (search) {
+      companionsQuery = companionsQuery.ilike('name', `%${search}%`);
+    }
+
+    if (filters.length > 0) {
+      companionsQuery = companionsQuery.in('category', filters);
+    }
+
+    const { data: companions, error: companionsError } = await companionsQuery;
+
     if (companionsError) throw companionsError;
 
-    return companions;
+    return {
+      data: companions.map(companion => ({
+        ...companion,
+        bookmarkedAt: bookmarks.find(b => b.companion_id === companion.id)?.created_at
+      })),
+      hasMore: totalCount ? offset + pageSize < totalCount : false
+    };
   } catch (error) {
     console.error('Error fetching bookmarked companions:', error);
     throw error;

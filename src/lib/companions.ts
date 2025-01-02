@@ -11,6 +11,7 @@ export interface Companion {
   card_number?: number;
   attributes?: { [key: string]: number };
   category?: string;
+  bookmarkedAt?: string;
 }
 
 export const fetchCompanions = async (): Promise<Companion[]> => {

@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { getBookmarkedCompanions } from "@services/companion/companionService";
 import CompanionCard from "@components/landing/CompanionCard";
 import { Bot, BookmarkIcon, Compass, Star, SlidersHorizontal } from "lucide-react";
 import { Button } from "@components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Skeleton } from "@components/ui/skeleton";
 import CompanionFilterSidebar from "@components/explore/CompanionFilterSidebar";
 import { ScrollArea } from "@components/ui/scroll-area";
@@ -12,41 +12,69 @@ import { Separator } from "@components/ui/separator";
 import { Badge } from "@components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@components/ui/tabs";
 import SearchBar from "./SearchBar";
+import { useInView } from "react-intersection-observer";
+import { motion } from "framer-motion";
+import type { Companion } from "@lib/companions";
 
 type SortOption = "recent" | "name";
+
+interface BookmarksResponse {
+  data: Companion[];
+  hasMore: boolean;
+}
 
 const BookmarksPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const { ref, inView } = useInView();
 
-  const { data: companions, isLoading } = useQuery({
-    queryKey: ["bookmarked-companions"],
-    queryFn: getBookmarkedCompanions
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error
+  } = useInfiniteQuery<BookmarksResponse>({
+    queryKey: ["bookmarked-companions", searchQuery, activeFilters, sortBy],
+    queryFn: ({ pageParam = 1 }) => 
+      getBookmarkedCompanions({
+        page: pageParam as number,
+        pageSize: 10,
+        search: searchQuery,
+        filters: activeFilters,
+        sort: sortBy
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.hasMore ? allPages.length + 1 : undefined;
+    }
   });
 
-  const filteredCompanions = companions?.filter(companion => 
-    companion.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    (activeFilters.length === 0 || activeFilters.includes(companion.category))
-  ) || [];
+  const companions = data?.pages.flatMap(page => page.data) || [];
 
-  const sortedCompanions = [...filteredCompanions].sort((a, b) => {
+  const sortedCompanions = [...companions].sort((a, b) => {
     switch (sortBy) {
       case "name":
         return a.name.localeCompare(b.name);
       default:
-        return new Date(b.bookmarkedAt).getTime() - new Date(a.bookmarkedAt).getTime();
+        return new Date(b.bookmarkedAt!).getTime() - new Date(a.bookmarkedAt!).getTime();
     }
   });
-
-  const hasCompanions = sortedCompanions.length > 0;
-  const recentCompanions = sortedCompanions.slice(0, 3);
-  const otherCompanions = sortedCompanions.slice(3);
 
   const handleFiltersChange = (filters: string[]) => {
     setActiveFilters(filters);
   };
+
+  // Infinite scroll trigger
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading) {
     return (
@@ -65,14 +93,24 @@ const BookmarksPage = () => {
             </div>
           </div>
         </div>
-        {/* Rest of loading skeleton remains the same */}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-black text-white pt-20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-red-400">
+            Error loading bookmarks: {error.message}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
-      {/* Hero Section with Stats */}
       <div className="relative bg-gradient-to-b from-green-500/10 via-green-500/5 to-transparent py-16 mb-8 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-green-500/10 via-transparent to-transparent opacity-50 animate-pulse-slow" />
         <div className="container mx-auto px-4 relative">
@@ -93,7 +131,6 @@ const BookmarksPage = () => {
       </div>
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Filter Sidebar */}
           <div className="w-full md:w-80 shrink-0">
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl overflow-hidden sticky top-24">
               <div className="p-6 border-b border-gray-800">
@@ -109,19 +146,14 @@ const BookmarksPage = () => {
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="flex-1 space-y-8">
-            {/* Controls Bar */}
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4">
               <div className="flex items-center justify-between gap-4">
-                {/* Search */}
                 <SearchBar
                   value={searchQuery}
                   onChange={setSearchQuery}
                   placeholder="Search bookmarked companions..."
                 />
-
-                {/* Sort Tabs */}
                 <Tabs value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
                   <TabsList className="bg-gray-800/50">
                     <TabsTrigger value="recent" className="data-[state=active]:bg-green-500">
@@ -136,64 +168,37 @@ const BookmarksPage = () => {
             </div>
 
             <ScrollArea className="h-[calc(100vh-320px)] pr-6">
-              {hasCompanions ? (
-                <>
-                  {/* Recent Bookmarks Section */}
-                  {sortedCompanions.slice(0, 3).length > 0 && (
-                    <section className="mb-12">
-                      <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-semibold text-white flex items-center gap-3">
-                          <Star className="w-6 h-6 text-green-400" />
-                          Recently Bookmarked
-                        </h2>
-                        <Badge variant="secondary" className="bg-green-500/10 text-green-400">
-                          {sortedCompanions.slice(0, 3).length} companions
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {sortedCompanions.slice(0, 3).map((companion) => (
-                          <div 
-                            key={companion.id} 
-                            className="group relative"
-                          >
+              {sortedCompanions.length > 0 ? (
+                <div className="space-y-12">
+                  <section>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {sortedCompanions.map((companion, index) => (
+                        <motion.div
+                          key={companion.id}
+                          initial={{ opacity: 0, y: 50 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          viewport={{ once: true }}
+                        >
+                          <div className="group relative">
                             <div className="absolute -inset-2 bg-gradient-to-r from-green-500/10 to-green-400/10 rounded-xl blur-xl group-hover:blur-2xl transition-all opacity-0 group-hover:opacity-100" />
                             <div className="relative transform hover:scale-[1.02] transition-all duration-300">
                               <CompanionCard companion={companion} />
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </section>
-                  )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </section>
 
-                  {/* All Bookmarks Section */}
-                  {sortedCompanions.slice(3).length > 0 && (
-                    <section>
-                      <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-semibold text-white flex items-center gap-3">
-                          <Bot className="w-6 h-6 text-green-400" />
-                          All Bookmarked Companions
-                        </h2>
-                        <Badge variant="secondary" className="bg-green-500/10 text-green-400">
-                          {sortedCompanions.slice(3).length} companions
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {sortedCompanions.slice(3).map((companion) => (
-                          <div 
-                            key={companion.id} 
-                            className="group relative"
-                          >
-                            <div className="absolute -inset-2 bg-gradient-to-r from-green-500/10 to-green-400/10 rounded-xl blur-xl group-hover:blur-2xl transition-all opacity-0 group-hover:opacity-100" />
-                            <div className="relative transform hover:scale-[1.02] transition-all duration-300">
-                              <CompanionCard companion={companion} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
+                  {hasNextPage && (
+                    <div ref={ref} className="h-20">
+                      {isFetchingNextPage && (
+                        <div className="text-center text-gray-400">Loading more companions...</div>
+                      )}
+                    </div>
                   )}
-                </>
+                </div>
               ) : (
                 <div className="flex items-center justify-center py-24 px-4">
                   <p className="text-gray-400 text-center text-lg leading-relaxed">
