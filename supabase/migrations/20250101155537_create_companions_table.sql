@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS public.companions (
     messages_count integer DEFAULT 0,
     chat_url text NOT NULL,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    is_featured boolean DEFAULT FALSE
 );
 
 -- Create indexes

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../landing/Footer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { fetchCompanions } from "../../services/companion/companion";
 import Gallery from "../landing/Gallery";
 import CompanionFilterSidebar from "./CompanionFilterSidebar";
@@ -12,7 +11,6 @@ import { Badge } from "../ui/badge";
 
 const ExplorePage = () => {
   const [companions, setCompanions] = useState([]);
-  const [activeTab, setActiveTab] = useState("popular");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -21,14 +19,14 @@ const ExplorePage = () => {
     const fetchCompanionsData = async () => {
       setLoading(true);
       try {
-        const data = await fetchCompanions(activeTab);
+        const data = await fetchCompanions("popular");
         setCompanions(data);
       } finally {
         setLoading(false);
       }
     };
     fetchCompanionsData();
-  }, [activeTab]);
+  }, []);
 
   const handleFiltersChange = (filters: string[]) => {
     setActiveFilters(filters);
@@ -76,13 +74,7 @@ const ExplorePage = () => {
 
           {/* Main Content */}
           <div className="flex-1">
-            {/* Tabs */}
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4">
-              <Tabs
-                defaultValue="popular"
-                className="w-full"
-                onValueChange={(value) => setActiveTab(value)}
-              >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-semibold text-white flex items-center gap-3">
                     <Star className="w-6 h-6 text-green-400" />
@@ -93,29 +85,6 @@ const ExplorePage = () => {
                   </Badge>
                 </div>
                 
-                <TabsList className="grid w-full grid-cols-3 gap-2 bg-gray-800/50 p-1 rounded-lg">
-                  <TabsTrigger 
-                    value="popular"
-                    className="data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                  >
-                    Popular
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="newest"
-                    className="data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                  >
-                    Newest
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="featured"
-                    className="data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                  >
-                    Featured
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Tab Contents */}
-                <TabsContent value="popular" className="mt-6">
                   {loading ? (
                     <div className="flex flex-col items-center justify-center p-8 space-y-4">
                       <LoadingSpinner className="w-12 h-12 text-green-400 animate-spin" />
@@ -144,10 +113,6 @@ const ExplorePage = () => {
                       </div>
                     </Card>
                   )}
-                </TabsContent>
-
-                {/* Repeat similar structure for other tabs */}
-              </Tabs>
             </div>
           </div>
         </div>
