@@ -70,6 +70,40 @@ export const updatePulseBalance = async (
   }
 };
 
+export const sendTip = async (
+  senderId: string,
+  recipientId: string,
+  amount: number
+): Promise<void> => {
+  const { session } = useAuth();
+  
+  if (!session) {
+    throw new Error('User not authenticated');
+  }
+
+  if (amount <= 0) {
+    throw new Error('Tip amount must be positive');
+  }
+
+  try {
+    // Get sender's balance
+    const senderBalance = await getPulseBalance(senderId);
+    if (senderBalance < amount) {
+      throw new Error('Insufficient Pulse balance');
+    }
+
+    // Get recipient's balance
+    const recipientBalance = await getPulseBalance(recipientId);
+
+    // Update balances
+    await updatePulseBalance(senderId, senderBalance - amount);
+    await updatePulseBalance(recipientId, recipientBalance + amount);
+  } catch (error) {
+    console.error('Error sending tip:', error);
+    throw error;
+  }
+};
+
 export const getProfileWithPulse = async (
   userId: string
 ): Promise<ProfileWithPulse> => {
