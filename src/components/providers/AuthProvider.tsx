@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { Profile } from "@/services/profile/profileTypes";
-import { supabase } from "@/lib/supabase";
-import { AuthContext } from "@/lib/auth";
+import { Profile } from "../../types/profile";
+import { supabase } from "../../lib/supabase";
+import { AuthContext } from "../../lib/auth";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -44,6 +44,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError("Failed to fetch profile");
     }
   };
+
+  const refreshProfile = useCallback(async () => {
+    if (session?.user?.id) {
+      await fetchProfile(session.user.id);
+    }
+  }, [session]);
 
   const createProfile = async (userId: string): Promise<void> => {
     try {
@@ -112,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error,
     isAdmin: profile?.role === "admin",
     signOut,
+    refreshProfile
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
