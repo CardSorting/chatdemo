@@ -11,10 +11,9 @@ import AdminLoginPage from "./components/admin/AdminLoginPage";
 import UsersPage from "./components/admin/UsersPage";
 import SettingsPage from "./components/admin/SettingsPage";
 import SubmitCompanion from "./components/companion/SubmitCompanion";
-import CompanionsPage from "./components/admin/CompanionsPage";
-import CompanionChat from "./components/companion/CompanionChat";
 import { AuthProvider } from "./components/providers/AuthProvider";
 import BookmarksPage from "./components/companion/BookmarksPage";
+import CompanionsPage from "./components/companion/CompanionsPage";
 
 function App() {
   return (
@@ -32,16 +31,15 @@ function App() {
               <Route path="settings" element={<SettingsPage />} />
             </Route>
             <Route path="/submit" element={<SubmitCompanion />} />
-            <Route path="/chat/:companionId" element={<CompanionChat />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/user/:userId" element={<UserProfile />} />
-            <Route path="/companions" element={<BookmarksPage />} />
+            <Route path="/bookmarks" element={<BookmarksPage />} />
+            <Route path="/companions/:companionId" element={<CompanionsPage />} />
           </Routes>
         </div>
       </Suspense>
     </AuthProvider>
   );
 }
-
 export default App;

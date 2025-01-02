@@ -132,8 +132,8 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
                          before:via-white/20 before:to-transparent before:translate-x-[-200%] 
                          hover:before:translate-x-[200%] before:transition-transform before:duration-700"
             >
-              <a href={companion.chat_url} target="_blank" rel="noopener noreferrer">
-                Start Chat
+              <a href={`/companions/${companion.id}`}>
+                Discover {companion.name}
               </a>
             </Button>
             <Button

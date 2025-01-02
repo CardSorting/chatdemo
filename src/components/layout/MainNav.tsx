@@ -65,8 +65,8 @@ const MainNav = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`${isActive("/companions") ? "text-green-400" : "text-gray-400"} hover:text-green-400`}
-                  onClick={() => navigate("/companions")}
+                  className={`${isActive("/bookmarks") ? "text-green-400" : "text-gray-400"} hover:text-green-400`}
+                  onClick={() => navigate("/bookmarks")}
                 >
                   <Bot className="w-4 h-4 mr-2" />
                   My Companions
