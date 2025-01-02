@@ -4,11 +4,14 @@ import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { getAvailableFilters } from "../../services/companion/companionService";
 
-const CompanionFilterSidebar = () => {
+interface CompanionFilterSidebarProps {
+  onFiltersChange: (filters: string[]) => void;
+}
+
+const CompanionFilterSidebar: React.FC<CompanionFilterSidebarProps> = ({ onFiltersChange }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [selectedCategories, setSelectedCategories] = useState({});
 
   useEffect(() => {
@@ -34,6 +37,13 @@ const CompanionFilterSidebar = () => {
 
     fetchFilters();
   }, []);
+
+  useEffect(() => {
+    const activeCategories = Object.keys(selectedCategories).filter(
+      (categoryId) => selectedCategories[categoryId]
+    );
+    onFiltersChange(activeCategories);
+  }, [selectedCategories, onFiltersChange]);
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategories(prev => ({

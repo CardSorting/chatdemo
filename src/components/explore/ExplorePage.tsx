@@ -9,6 +9,7 @@ import CompanionFilterSidebar from "./CompanionFilterSidebar";
 const ExplorePage = () => {
   const [companions, setCompanions] = useState([]);
   const [activeTab, setActiveTab] = useState("popular");
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,13 +20,21 @@ const ExplorePage = () => {
     fetchCompanions();
   }, [activeTab]);
 
+  const handleFiltersChange = (filters: string[]) => {
+    setActiveFilters(filters);
+  };
+
+  const filteredCompanions = companions?.filter(companion => {
+    return (activeFilters.length === 0 || activeFilters.includes(companion.category))
+  }) || [];
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* If the header is fixed, add enough padding to the main area */}
       <main className="flex-1 pt-16">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr]">
-            <CompanionFilterSidebar />
+            <CompanionFilterSidebar onFiltersChange={handleFiltersChange} />
 
             <div>
               <Tabs
@@ -42,7 +51,7 @@ const ExplorePage = () => {
                 {/* Each Tab Content */}
                 <TabsContent value="popular">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {companions.map((companion) => (
+                    {filteredCompanions.map((companion) => (
                       <div
                         key={companion.id}
                         className="cursor-pointer"
