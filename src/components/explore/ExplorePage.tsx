@@ -34,9 +34,6 @@ const ExplorePage = () => {
     setActiveFilters(filters);
   };
 
-  const filteredCompanions = companions.filter(companion => {
-    return activeFilters.length === 0 || activeFilters.includes(companion.category);
-  });
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
@@ -92,7 +89,7 @@ const ExplorePage = () => {
                     Explore Companions
                   </h2>
                   <Badge variant="secondary" className="bg-green-500/10 text-green-400">
-                    {filteredCompanions.length} companions
+                    {companions.length} companions
                   </Badge>
                 </div>
                 
@@ -124,8 +121,8 @@ const ExplorePage = () => {
                       <LoadingSpinner className="w-12 h-12 text-green-400 animate-spin" />
                       <p className="text-gray-400">Loading companions...</p>
                     </div>
-                  ) : filteredCompanions.length > 0 ? (
-                    <Gallery fetchCompanions={async () => filteredCompanions} />
+                  ) : companions.length > 0 ? (
+                    <Gallery fetchCompanions={async () => companions} activeFilters={activeFilters} />
                   ) : (
                     <Card className="p-8 text-center bg-gray-900/50 backdrop-blur-sm">
                       <div className="max-w-md mx-auto">

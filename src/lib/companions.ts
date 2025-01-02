@@ -10,6 +10,7 @@ export interface Companion {
   series?: string;
   card_number?: number;
   attributes?: { [key: string]: number };
+  category?: string;
 }
 
 export const fetchCompanions = async (): Promise<Companion[]> => {
@@ -29,7 +30,8 @@ export const fetchCompanions = async (): Promise<Companion[]> => {
       attributes: {
         intelligence: 80,
         creativity: 90
-      }
+      },
+      category: "AI"
     }
   ];
 };

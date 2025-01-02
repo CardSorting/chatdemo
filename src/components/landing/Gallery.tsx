@@ -4,9 +4,10 @@ import CompanionCard from "./CompanionCard";
 
 interface GalleryProps {
   fetchCompanions: () => Promise<Companion[]>;
+  activeFilters?: string[];
 }
 
-const Gallery = ({ fetchCompanions }: GalleryProps) => {
+const Gallery = ({ fetchCompanions, activeFilters }: GalleryProps) => {
   const [companions, setCompanions] = useState<Companion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,6 +28,10 @@ const Gallery = ({ fetchCompanions }: GalleryProps) => {
     loadCompanions();
   }, [fetchCompanions]);
 
+  const filteredCompanions = activeFilters && activeFilters.length > 0
+    ? companions.filter(companion => activeFilters.includes(companion.category))
+    : companions;
+
   if (loading) {
     return <div className="text-center text-gray-400">Loading companions...</div>;
   }
@@ -37,7 +42,7 @@ const Gallery = ({ fetchCompanions }: GalleryProps) => {
 
   return (
     <div className="grid grid-cols-3 gap-8 p-8">
-      {companions.map((companion) => (
+      {filteredCompanions.map((companion) => (
         <div key={companion.id}>
           <CompanionCard companion={companion} />
         </div>
