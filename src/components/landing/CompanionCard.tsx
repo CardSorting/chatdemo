@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Companion } from "../../lib/companions";
-import { getCompanionStats, likeCompanion } from "../../services/companion/companionService";
-import { Skeleton } from "../ui/skeleton";
+import { likeCompanion } from "../../services/companion/companionService";
 import { useToast } from "../ui/use-toast";
 
 interface CompanionCardProps {
@@ -16,17 +15,18 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(false);
-
-  const { data: stats, isLoading, isError } = useQuery({
-    queryKey: ['companionStats', companion.id],
-    queryFn: () => getCompanionStats(companion.id)
-  });
+  const [localLikesCount, setLocalLikesCount] = useState(companion.likes_count);
 
   const likeMutation = useMutation({
     mutationFn: () => likeCompanion(companion.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['companionStats', companion.id] });
+      // Update local state
+      setLocalLikesCount(prev => prev + 1);
       setIsLiked(true);
+      
+      // Invalidate queries to trigger refresh
+      queryClient.invalidateQueries({ queryKey: ['companions'] });
+      
       toast({
         title: "Liked!",
         description: "Your like has been recorded.",
@@ -95,37 +95,21 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
                 ? 'bg-green-500/20 border-green-500/50' 
                 : 'bg-gradient-to-br from-green-500/10 to-blue-500/10 border-green-500/20 group-hover:border-green-500/30'
             }`}>
-              {isLoading ? (
-                <Skeleton className="h-4 w-4 rounded-full" />
-              ) : (
-                <span className={`text-sm ${isLiked ? 'text-green-400' : ''}`}>❤️</span>
-              )}
+              <span className={`text-sm ${isLiked ? 'text-green-400' : ''}`}>❤️</span>
             </div>
-            {isLoading ? (
-              <Skeleton className="h-4 w-8" />
-            ) : (
-              <span className={`text-sm ${
-                isLiked ? 'text-green-400' : 'text-gray-400 group-hover:text-gray-300'
-              } transition-colors`}>
-                {isError ? 'Error' : stats?.likesCount}
-              </span>
-            )}
+            <span className={`text-sm ${
+              isLiked ? 'text-green-400' : 'text-gray-400 group-hover:text-gray-300'
+            } transition-colors`}>
+              {localLikesCount}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-full border border-green-500/20 group-hover:border-green-500/30 transition-colors">
-              {isLoading ? (
-                <Skeleton className="h-4 w-4 rounded-full" />
-              ) : (
-                <span className="text-sm">💬</span>
-              )}
+              <span className="text-sm">💬</span>
             </div>
-            {isLoading ? (
-              <Skeleton className="h-4 w-8" />
-            ) : (
-              <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                {isError ? 'Error' : stats?.messagesCount}
-              </span>
-            )}
+            <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+              {companion.messages_count}
+            </span>
           </div>
         </div>
         <Button
