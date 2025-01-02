@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { useProfile } from "../../../hooks/useProfile";
+import { usePulse } from "../../../hooks/usePulse";
 import { Card } from "../../ui/card";
 import LoadingSpinner from "../../ui/loading-spinner";
 import ProfileHeader from "./ProfileHeader";
@@ -17,6 +18,7 @@ const ProfileContainer = () => {
     error,
     refreshProfile,
   } = useProfile(userId);
+  const { balance, loading: pulseLoading } = usePulse(userId || '');
 
   if (!userId) {
     return (
@@ -75,6 +77,25 @@ const ProfileContainer = () => {
               stats={defaultSocialStats}
               onStatsChange={refreshProfile}
             />
+          </div>
+
+          {/* Pulse Balance Section */}
+          <div className="relative">
+            <Card className="p-6 bg-black/50 backdrop-blur-sm border-green-500/20">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-green-500">Pulse Balance</h3>
+                  <p className="text-sm text-gray-400">Your digital credits</p>
+                </div>
+                {pulseLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <div className="text-2xl font-bold text-green-500">
+                    {balance} Pulse
+                  </div>
+                )}
+              </div>
+            </Card>
           </div>
 
           {/* Tabs Section */}

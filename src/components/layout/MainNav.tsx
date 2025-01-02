@@ -1,14 +1,14 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+} from "../ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   Bot,
   Compass,
@@ -18,12 +18,15 @@ import {
   User,
   LogIn,
 } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "../../hooks/useAuth";
+import { usePulse } from "../../hooks/usePulse";
+import { Badge } from "../ui/badge";
 
 const MainNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, loading, signOut } = useAuth();
+  const { balance } = usePulse(user?.id || '');
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -85,46 +88,51 @@ const MainNav = () => {
                       Create
                     </Button>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 rounded-full"
-                        >
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={
-                                profile?.avatar_url ||
-                                `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name}`
-                              }
-                              alt={profile?.full_name}
-                            />
-                            <AvatarFallback>
-                              {profile?.full_name?.[0] || user.email?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem
-                          onClick={() => navigate(`/user/${user.id}`)}
-                        >
-                          <User className="mr-2 h-4 w-4" />
-                          Profile
-                        </DropdownMenuItem>
-                        {profile?.role === "admin" && (
-                          <DropdownMenuItem onClick={() => navigate("/admin")}>
-                            <Settings className="mr-2 h-4 w-4" />
-                            Admin
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-green-500/20 text-green-400">
+                        {balance} Pulse
+                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 rounded-full"
+                          >
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage
+                                src={
+                                  profile?.avatar_url ||
+                                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name}`
+                                }
+                                alt={profile?.full_name}
+                              />
+                              <AvatarFallback>
+                                {profile?.full_name?.[0] || user.email?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() => navigate(`/user/${user.id}`)}
+                          >
+                            <User className="mr-2 h-4 w-4" />
+                            Profile
                           </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleSignOut}>
-                          <LogOut className="mr-2 h-4 w-4" />
-                          Sign Out
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          {profile?.role === "admin" && (
+                            <DropdownMenuItem onClick={() => navigate("/admin")}>
+                              <Settings className="mr-2 h-4 w-4" />
+                              Admin
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={handleSignOut}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sign Out
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </>
                 ) : (
                   <Button

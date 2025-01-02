@@ -43,3 +43,15 @@ export interface ProfileUpdateResponse {
 
 export type ProfileVisibility = "public" | "private" | "followers";
 export type Theme = "dark" | "light" | "system";
+
+export interface Pulse {
+  id: string;
+  user_id: string;
+  balance: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProfileWithPulse extends Profile {
+  pulse: Pulse;
+}
