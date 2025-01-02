@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { Pulse, ProfileWithPulse } from '../../types/profile';
+import { Database } from '../../types/supabase';
 import { useAuth } from '../../lib/auth';
 
 export const getPulseBalance = async (userId: string): Promise<number> => {
@@ -26,7 +27,7 @@ export const getPulseBalance = async (userId: string): Promise<number> => {
       }
       throw error;
     }
-    return data?.balance || 0;
+    return (data?.balance as number) || 0;
   } catch (error) {
     console.error('Error fetching Pulse balance:', error);
     return 0;
@@ -56,7 +57,13 @@ export const updatePulseBalance = async (
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      balance: data.balance,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    } as Pulse;
   } catch (error) {
     console.error('Error updating Pulse balance:', error);
     throw error;
@@ -80,7 +87,28 @@ export const getProfileWithPulse = async (
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      id: data.id,
+      full_name: data.full_name,
+      username: data.username,
+      bio: data.bio,
+      website: data.website,
+      avatar_url: data.avatar_url,
+      email: data.email,
+      role: data.role,
+      email_notifications: data.email_notifications,
+      visibility: data.visibility,
+      theme: data.theme,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      pulse: {
+        id: data.pulse[0].id,
+        user_id: data.pulse[0].user_id,
+        balance: data.pulse[0].balance,
+        created_at: data.pulse[0].created_at,
+        updated_at: data.pulse[0].updated_at
+      }
+    } as ProfileWithPulse;
   } catch (error) {
     console.error('Error fetching profile with Pulse:', error);
     throw error;

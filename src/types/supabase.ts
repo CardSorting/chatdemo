@@ -6,10 +6,142 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
-      [_ in never]: never
+      pulse: {
+        Row: {
+          id: string
+          user_id: string
+          balance: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      profiles: {
+        Row: {
+          id: string
+          full_name: string | null
+          username: string | null
+          bio: string | null
+          avatar_url: string | null
+          website: string | null
+          email: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          full_name?: string | null
+          username?: string | null
+          bio?: string | null
+          avatar_url?: string | null
+          website?: string | null
+          email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          full_name?: string | null
+          username?: string | null
+          bio?: string | null
+          avatar_url?: string | null
+          website?: string | null
+          email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      companions: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          avatar_url: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          is_public: boolean
+          tags: string[]
+        }
+        Insert: {
+          id?: string
+          name: string
+          description: string
+          avatar_url: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          is_public?: boolean
+          tags?: string[]
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          avatar_url?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          is_public?: boolean
+          tags?: string[]
+        }
+      }
+      likes: {
+        Row: {
+          id: string
+          user_id: string
+          companion_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          companion_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          companion_id?: string
+          created_at?: string
+        }
+      }
+      companion_actions: {
+        Row: {
+          id: string
+          companion_id: string
+          action: 'chat' | 'view'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          companion_id: string
+          action: 'chat' | 'view'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          companion_id?: string
+          action?: 'chat' | 'view'
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

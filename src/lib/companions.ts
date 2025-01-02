@@ -1,19 +1,13 @@
 import { supabase } from './supabase';
+import { Database } from '../types/supabase';
 
-export interface Companion {
-  id: string;
-  name: string;
-  description: string;
-  avatar_url: string;
+export type Companion = Database['public']['Tables']['companions']['Row'] & {
   creator_name: string;
-  tags: string[];
   likes_count: number;
   messages_count: number;
   chat_url: string;
-  created_at: string;
-  updated_at: string;
   status?: 'active' | 'pending' | 'suspended';
-}
+};
 
 export const fetchCompanions = async (page = 1, pageSize = 6) => {
   const { data, error } = await supabase
@@ -45,7 +39,7 @@ export const fetchLikedStatuses = async (companionIds: string[], userId: string)
   if (error) throw error;
   
   const likedMap: Record<string, boolean> = {};
-  data.forEach((like) => {
+  data.forEach((like: { companion_id: string }) => {
     likedMap[like.companion_id] = true;
   });
   return likedMap;

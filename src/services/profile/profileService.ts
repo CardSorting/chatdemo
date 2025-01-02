@@ -1,11 +1,12 @@
 import { supabase } from "../../lib/supabase";
 import { Profile, ProfileUpdateData } from "../../types/profile";
+import { Database } from "../../types/supabase";
 
 class ProfileService {
   async getProfile(userId: string): Promise<Profile | null> {
     try {
       const { data, error } = await supabase
-        .from("profiles")
+        .from('profiles')
         .select("*")
         .eq("id", userId)
         .single();
@@ -21,7 +22,21 @@ class ProfileService {
         throw new Error("Profile not found");
       }
 
-      return data;
+      return {
+        id: data.id,
+        full_name: data.full_name,
+        username: data.username,
+        bio: data.bio,
+        website: data.website,
+        avatar_url: data.avatar_url,
+        email: data.email,
+        role: data.role,
+        email_notifications: data.email_notifications,
+        visibility: data.visibility,
+        theme: data.theme,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      } as Profile;
     } catch (error) {
       console.error("Error fetching profile:", error);
       throw error;
@@ -37,7 +52,7 @@ class ProfileService {
     // Check username availability if changed
     if (updateData.username) {
       const { data: existingUser, error: usernameError } = await supabase
-        .from("profiles")
+        .from('profiles')
         .select("username")
         .eq("username", updateData.username)
         .neq("id", userId)
@@ -67,7 +82,7 @@ class ProfileService {
 
     // Perform update
     const { data, error } = await supabase
-      .from("profiles")
+      .from('profiles')
       .update(dataToUpdate)
       .eq("id", userId)
       .select()
@@ -76,13 +91,27 @@ class ProfileService {
     if (error) throw error;
     if (!data) throw new Error("Profile update failed");
 
-    return data;
+    return {
+      id: data.id,
+      full_name: data.full_name,
+      username: data.username,
+      bio: data.bio,
+      website: data.website,
+      avatar_url: data.avatar_url,
+      email: data.email,
+      role: data.role,
+      email_notifications: data.email_notifications,
+      visibility: data.visibility,
+      theme: data.theme,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    } as Profile;
   }
 
   async getAchievements(): Promise<any[]> {
     try {
       const { data, error } = await supabase
-        .from("achievements")
+        .from('achievements')
         .select("*")
         .order("created_at", { ascending: true });
 
@@ -97,7 +126,7 @@ class ProfileService {
   async getUserAchievements(userId: string): Promise<any[]> {
     try {
       const { data, error } = await supabase
-        .from("user_achievements")
+        .from('user_achievements')
         .select("*, achievements(*)")
         .eq("user_id", userId);
 
@@ -112,7 +141,7 @@ class ProfileService {
   async updateAchievementProgress(userId: string, achievementId: string, progress: number): Promise<any> {
     try {
       const { data, error } = await supabase
-        .from("user_achievements")
+        .from('user_achievements')
         .upsert({
           user_id: userId,
           achievement_id: achievementId,
