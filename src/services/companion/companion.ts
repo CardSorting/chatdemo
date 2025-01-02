@@ -1,6 +1,7 @@
 import { Tables } from "../../types/supabase";
 import { supabase } from "../../lib/supabase";
 import { SearchResponse } from "../../types/search";
+import { Companion } from "../../lib/companions";
 
 export const getCompanions = async (
   query: string,
@@ -35,15 +36,17 @@ export const fetchCompanions = async (
   activeTab: string,
   page: number = 1,
   pageSize: number = 10
-): Promise<Tables<"companions">[]> => {
+): Promise<Companion[]> => {
   const offset = (page - 1) * pageSize;
   let query = supabase.from("companions")
-    .select("*, profiles!inner(name)");
+    .select("id, name, description, avatar_url, creator_id, creator_name, messages_count, chat_url, created_at");
 
   if (activeTab === "newest") {
     query = query.order("created_at", { ascending: false });
   } else if (activeTab === "featured") {
     query = query.eq("is_featured", true);
+  } else if (activeTab === "popular") {
+    query = query.order("messages_count", { ascending: false });
   }
   
   const { data, error } = await query
@@ -52,9 +55,14 @@ export const fetchCompanions = async (
   if (error) throw error;
 
   return data?.map(companion => ({
-    ...companion,
-    creator_name: companion.profiles.name,
-    messages_count: companion.messages_count || 0
+    id: companion.id,
+    name: companion.name,
+    creator_name: companion.creator_name,
+    avatar_url: companion.avatar_url,
+    description: companion.description,
+    messages_count: companion.messages_count || 0,
+    chat_url: companion.chat_url,
+    created_at: companion.created_at
   })) || [];
 };
 
