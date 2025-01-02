@@ -50,17 +50,21 @@ const ExplorePage = () => {
 
                 {/* Each Tab Content */}
                 <TabsContent value="popular">
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredCompanions.map((companion) => (
-                      <div
-                        key={companion.id}
-                        className="cursor-pointer"
-                        onClick={() => navigate(`/companion/${companion.id}`)}
-                      >
-                        <CompanionCard companion={companion} />
-                      </div>
-                    ))}
-                  </div>
+                  {filteredCompanions.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredCompanions.map((companion) => (
+                        <div
+                          key={companion.id}
+                          className="cursor-pointer"
+                          onClick={() => navigate(`/companion/${companion.id}`)}
+                        >
+                          <CompanionCard companion={companion} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-gray-500">No companions found matching your filters.</div>
+                  )}
                 </TabsContent>
                 {/* Other Tabs ... */}
               </Tabs>

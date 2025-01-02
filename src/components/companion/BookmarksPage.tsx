@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getBookmarkedCompanions } from "@services/companion/companionService";
 import CompanionCard from "@components/landing/CompanionCard";
-import { Bot, BookmarkIcon, Search, Compass, Star, SlidersHorizontal, Clock, TrendingUp } from "lucide-react";
+import { Bot, BookmarkIcon, Search, Compass, Star, SlidersHorizontal } from "lucide-react";
 import { Button } from "@components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@components/ui/input";
@@ -31,7 +31,7 @@ const BookmarksPage = () => {
     (activeFilters.length === 0 || activeFilters.includes(companion.category))
   ) || [];
 
-  const sortedCompanions = [...filteredCompanions].sort((a, b) => {
+    const sortedCompanions = [...filteredCompanions].sort((a, b) => {
     switch (sortBy) {
       case "name":
         return a.name.localeCompare(b.name);
@@ -89,9 +89,8 @@ const BookmarksPage = () => {
               </p>
             </div>
           </div>
-        </div>
       </div>
-
+      </div>
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Filter Sidebar */}
@@ -109,38 +108,38 @@ const BookmarksPage = () => {
 
           {/* Main Content */}
           <div className="flex-1 space-y-8">
-            {hasCompanions ? (
-              <>
-                {/* Controls Bar */}
-                <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    {/* Search */}
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400" />
-                      <Input
-                        type="text"
-                        placeholder="Search bookmarked companions..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 bg-gray-800/50 border-gray-700/50 focus:border-green-500 focus:ring-green-500"
-                      />
-                    </div>
-
-                    {/* Sort Tabs */}
-                    <Tabs value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                      <TabsList className="bg-gray-800/50">
-                        <TabsTrigger value="recent" className="data-[state=active]:bg-green-500">
-                          Most Recent
-                        </TabsTrigger>
-                        <TabsTrigger value="name" className="data-[state=active]:bg-green-500">
-                          Name
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
+            {/* Controls Bar */}
+            <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center justify-between gap-4">
+                {/* Search */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search bookmarked companions..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-gray-800/50 border-gray-700/50 focus:border-green-500 focus:ring-green-500"
+                  />
                 </div>
 
-                <ScrollArea className="h-[calc(100vh-320px)] pr-6">
+                {/* Sort Tabs */}
+                <Tabs value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                  <TabsList className="bg-gray-800/50">
+                    <TabsTrigger value="recent" className="data-[state=active]:bg-green-500">
+                      Most Recent
+                    </TabsTrigger>
+                    <TabsTrigger value="name" className="data-[state=active]:bg-green-500">
+                      Name
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </div>
+
+            <ScrollArea className="h-[calc(100vh-320px)] pr-6">
+              {hasCompanions ? (
+                <>
                   {/* Recent Bookmarks Section */}
                   {recentCompanions.length > 0 && (
                     <section className="mb-12">
@@ -196,31 +195,15 @@ const BookmarksPage = () => {
                       </div>
                     </section>
                   )}
-                </ScrollArea>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-24 px-4">
-                <div className="relative">
-                  <div className="absolute -inset-4 bg-green-500/10 rounded-full blur-xl animate-pulse" />
-                  <div className="relative bg-green-500/5 rounded-full p-6 mb-6 backdrop-blur-sm">
-                    <BookmarkIcon className="w-12 h-12 text-green-400" />
-                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center py-24 px-4">
+                  <p className="text-gray-400 text-center text-lg leading-relaxed">
+                    No bookmarked companions found matching your filters.
+                  </p>
                 </div>
-                <h2 className="text-2xl font-semibold text-white mb-4 text-center">
-                  No bookmarked companions yet
-                </h2>
-                <p className="text-gray-400 text-center mb-8 max-w-md text-lg leading-relaxed">
-                  Start exploring our collection of AI companions and bookmark your favorites to access them quickly.
-                </p>
-                <Button
-                  onClick={() => navigate("/explore")}
-                  className="bg-green-500 hover:bg-green-600 text-white px-8 py-6 text-lg rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-green-500/20"
-                >
-                  <Compass className="w-5 h-5 mr-2" />
-                  Explore Companions
-                </Button>
-              </div>
-            )}
+              )}
+            </ScrollArea>
           </div>
         </div>
       </div>
