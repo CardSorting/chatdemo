@@ -35,7 +35,7 @@ const ExplorePage = () => {
   };
 
   const filteredCompanions = companions?.filter(companion => {
-    return (activeFilters.length === 0 || activeFilters.includes(companion.category))
+    return activeFilters.length === 0 || activeFilters.includes(companion.category);
   }) || [];
 
   return (

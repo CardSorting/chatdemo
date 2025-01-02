@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { getBookmarkedCompanions } from "@services/companion/companionService";
 import CompanionCard from "@components/landing/CompanionCard";
-import { Bot, BookmarkIcon, Search, Compass, Star, SlidersHorizontal } from "lucide-react";
+import { Bot, BookmarkIcon, Compass, Star, SlidersHorizontal } from "lucide-react";
 import { Button } from "@components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@components/ui/input";
 import { useState } from "react";
 import { Skeleton } from "@components/ui/skeleton";
 import CompanionFilterSidebar from "@components/explore/CompanionFilterSidebar";
@@ -12,6 +11,7 @@ import { ScrollArea } from "@components/ui/scroll-area";
 import { Separator } from "@components/ui/separator";
 import { Badge } from "@components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@components/ui/tabs";
+import SearchBar from "./SearchBar";
 
 type SortOption = "recent" | "name";
 
@@ -31,7 +31,7 @@ const BookmarksPage = () => {
     (activeFilters.length === 0 || activeFilters.includes(companion.category))
   ) || [];
 
-    const sortedCompanions = [...filteredCompanions].sort((a, b) => {
+  const sortedCompanions = [...filteredCompanions].sort((a, b) => {
     switch (sortBy) {
       case "name":
         return a.name.localeCompare(b.name);
@@ -89,7 +89,7 @@ const BookmarksPage = () => {
               </p>
             </div>
           </div>
-      </div>
+        </div>
       </div>
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row gap-8">
@@ -115,16 +115,11 @@ const BookmarksPage = () => {
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4">
               <div className="flex items-center justify-between gap-4">
                 {/* Search */}
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400" />
-                  <Input
-                    type="text"
-                    placeholder="Search bookmarked companions..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-gray-800/50 border-gray-700/50 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
+                <SearchBar
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search bookmarked companions..."
+                />
 
                 {/* Sort Tabs */}
                 <Tabs value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
