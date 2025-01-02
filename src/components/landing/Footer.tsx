@@ -59,23 +59,7 @@ const Footer = () => {
               </a>
             </div>
           </div>
-
-          <div className="space-y-4">
-            <h4 className="text-white font-semibold">Membership</h4>
-            <div className="flex items-center space-x-2">
-              <Heart className="w-5 h-5 text-pink-500" />
-              <a
-                href="https://www.patreon.com/c/matrixmingle"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-pink-500"
-              >
-                Support us on Patreon
-              </a>
-            </div>
-          </div>
         </div>
-
         <div className="mt-8 pt-8 border-t border-green-500/20">
           <p className="text-center text-gray-400">
             © {new Date().getFullYear()} Matrix Mingle. All rights reserved.
