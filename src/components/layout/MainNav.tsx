@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../ui/button";
 import {
@@ -17,28 +17,17 @@ import {
   Settings,
   User,
   LogIn,
-  Search,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { usePulse } from "../../hooks/usePulse";
 import { Badge } from "../ui/badge";
-import { Input } from "../ui/input";
-import { getCompanions } from "../../services/companion/companion";
-import { useQuery } from "@tanstack/react-query";
+import { SearchBar } from "../ui/SearchBar";
 
 const MainNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading: authLoading, signOut } = useAuth();
   const { balance } = usePulse(user?.id || '');
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const { data: searchResults } = useQuery({
-    queryKey: ["search-companions", searchQuery],
-    queryFn: () => getCompanions(searchQuery),
-    enabled: searchQuery.length > 2,
-  });
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -60,55 +49,7 @@ const MainNav = () => {
               Matrix Mingle
             </Link>
 
-            {/* Search Bar */}
-            <div className="relative">
-              <div className="flex items-center">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400" />
-                <Input
-                  type="text"
-                  placeholder="Search companions..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setIsSearchOpen(true)}
-                  onBlur={() => setTimeout(() => setIsSearchOpen(false), 100)}
-                  className="pl-10 w-64 bg-gray-800/50 border-gray-700/50 focus:border-green-500 focus:ring-green-500 text-white"
-                />
-              </div>
-
-              {/* Search Results Dropdown */}
-              {isSearchOpen && searchQuery.length > 2 && (
-                <div className="absolute mt-2 w-96 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden z-50">
-                  <div className="max-h-96 overflow-y-auto">
-                    {searchResults?.map((companion) => (
-                      <div
-                        key={companion.id}
-                        className="p-3 hover:bg-gray-800/50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          navigate(`/companion/${companion.id}`);
-                          setIsSearchOpen(false);
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={companion.avatar_url}
-                            alt={companion.name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          <div className="flex-1">
-                            <h3 className="text-white font-medium">
-                              {companion.name}
-                            </h3>
-                            <p className="text-sm text-white">
-                              {companion.description}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <SearchBar onSelect={(id) => navigate(`/companion/${id}`)} />
 
             <nav className="hidden md:flex items-center gap-4">
               <Button
@@ -136,7 +77,7 @@ const MainNav = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
-            {!loading && (
+            {!authLoading && (
               <>
                 {user ? (
                   <>
