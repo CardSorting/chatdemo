@@ -57,3 +57,51 @@ export const likeCompanion = async (companionId: string) => {
     throw error;
   }
 };
+
+export const bookmarkCompanion = async (companionId: string) => {
+  try {
+    // Get the current user
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user) throw new Error('No user found');
+
+    // Try to create the bookmark
+    const { data, error } = await supabase
+      .from('bookmarks')
+      .upsert({
+        user_id: user.id,
+        companion_id: companionId,
+        created_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,companion_id',
+        ignoreDuplicates: true
+      })
+      .select()
+      .single();
+
+    if (error) {
+      // If the error is not a duplicate entry error
+      if (error.code !== '23505') {
+        console.error('Error bookmarking companion:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Detailed error in bookmarkCompanion:', {
+      companionId,
+      error
+    });
+    throw error;
+  }
+};

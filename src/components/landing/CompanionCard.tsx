@@ -5,7 +5,7 @@ import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { useToast } from "@components/ui/use-toast";
 import { useAuth } from "@hooks/useAuth";
-import { likeCompanion } from "@services/companion/companionService";
+import { bookmarkCompanion } from "@services/companion/companionService";
 
 interface Companion {
   id: string;
@@ -13,7 +13,6 @@ interface Companion {
   creator_name: string;
   avatar_url?: string;
   description?: string;
-  likes_count: number;
   messages_count: number;
   chat_url?: string;
 }
@@ -27,90 +26,75 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Local state for optimistic updates
-  const [isLiked, setIsLiked] = useState(false);
-  const [localLikesCount, setLocalLikesCount] = useState(companion.likes_count);
+  // Local state for bookmark status
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
-  // Define the like mutation
-  const likeMutation = useMutation({
-    mutationFn: () => likeCompanion(companion.id),
+  // Define the bookmark mutation
+  const bookmarkMutation = useMutation({
+    mutationFn: () => bookmarkCompanion(companion.id),
     onMutate: async () => {
-      // Cancel any outgoing refetches so we don't overwrite optimistic updates
       await queryClient.cancelQueries({ queryKey: ["companions"] });
-
-      // Snapshot the previous data
       const previousCompanions = queryClient.getQueryData(["companions"]);
-
-      // Optimistically update the local UI
-      setLocalLikesCount((prev) => prev + 1);
-      setIsLiked(true);
-
-      // Return context so we can roll back if there's an error
+      setIsBookmarked(true);
       return { previousCompanions };
     },
     onSuccess: () => {
-      // Invalidate the companions query so React Query refetches data
       queryClient.invalidateQueries({ queryKey: ["companions"] });
       toast({
-        title: "Liked!",
-        description: "Your like has been recorded.",
+        title: "Bookmarked!",
+        description: "Companion added to your bookmarks",
       });
     },
     onError: (_error, _variables, context) => {
-      // Roll back local changes if the mutation fails
       if (context?.previousCompanions) {
         queryClient.setQueryData(["companions"], context.previousCompanions);
       }
-      setLocalLikesCount(companion.likes_count);
-      setIsLiked(false);
+      setIsBookmarked(false);
       toast({
         title: "Error",
-        description: "Failed to like companion",
+        description: "Failed to bookmark companion",
         variant: "destructive",
       });
     },
     onSettled: () => {
-      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ["companions"] });
     },
   });
 
-  const handleLikeClick = (e: React.MouseEvent) => {
+  const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) {
       toast({
         title: "Authentication Required",
-        description: "Please sign in to like companions",
+        description: "Please sign in to bookmark companions",
         variant: "destructive",
       });
       return;
     }
-    if (!isLiked) {
-      likeMutation.mutate();
-    }
+    bookmarkMutation.mutate();
   };
 
   return (
     <Card className="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col h-full relative">
-      {/* Like button - positioned at top right */}
+      {/* Bookmark button - positioned at top right */}
       <button
-        onClick={handleLikeClick}
+        onClick={handleBookmarkClick}
         className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        aria-label="Like companion"
+        aria-label="Bookmark companion"
       >
         <div
           className={`w-8 h-8 flex items-center justify-center rounded-full border ${
-            isLiked
-              ? "bg-red-100 border-red-300"
+            isBookmarked
+              ? "bg-blue-100 border-blue-300"
               : "bg-gray-100 border-gray-300 dark:bg-gray-700 dark:border-gray-600"
           }`}
         >
           <span
             className={`text-sm ${
-              isLiked ? "text-red-500" : "text-gray-500 dark:text-gray-400"
+              isBookmarked ? "text-blue-500" : "text-gray-500 dark:text-gray-400"
             }`}
           >
-            ❤️
+            📌
           </span>
         </div>
       </button>
