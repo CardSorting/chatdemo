@@ -128,6 +128,11 @@ export default function CompanionsPage() {
 
       <HeroSection companion={companion} />
       
+      {/* Screenshots Section */}
+      <div className="container mx-auto px-4 py-12">
+        <ScreenshotsSection screenshots={companion.screenshots} />
+      </div>
+
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-12">
