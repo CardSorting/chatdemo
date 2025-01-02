@@ -1,14 +1,11 @@
-import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../../components/ui/avatar";
 import { Card } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
-import { Star, MessageSquare, Bookmark, Heart, Share2, Users, MessageCircle, Download, PlayCircle, ChevronRight, Info, Clock, Calendar, Tag, Gift } from "lucide-react";
+import { Star, MessageSquare, Bookmark, Heart, Share2, Users, MessageCircle, Download, PlayCircle, ChevronRight, Info, Clock, Calendar, Tag } from "lucide-react";
 import { cn } from "../../../../lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../../../../components/ui/carousel";
 import { Progress } from "../../../../components/ui/progress";
-import { useAuth } from "../../../../lib/auth";
-import { sendTip } from "../../../../services/pulse/pulseService";
-import { toast } from "../../../../components/ui/use-toast";
+import { TippingSection } from "./TippingSection";
 
 interface HeroSectionProps {
   companion: {
@@ -38,39 +35,9 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ companion }: HeroSectionProps) {
-  const { session } = useAuth();
-  const [isTipping, setIsTipping] = useState(false);
   const screenshots = companion.screenshots || [];
   const reviews = companion.reviews || [];
   const developerInfo = companion.developer_info || {};
-
-  const handleTip = async (amount: number) => {
-    if (!session?.user?.id) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to send tips",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsTipping(true);
-    try {
-      await sendTip(session.user.id, companion.creator_id, amount);
-      toast({
-        title: "Tip Sent!",
-        description: `You successfully sent ${amount} Pulse to ${companion.creator_name}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Tip Failed",
-        description: error instanceof Error ? error.message : "Failed to send tip",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTipping(false);
-    }
-  };
 
   return (
     <div className="pt-24 pb-16 bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-950">
@@ -181,16 +148,10 @@ export function HeroSection({ companion }: HeroSectionProps) {
                 <span className="text-lg">Start Chatting Now</span>
               </Button>
               <div className="flex gap-4">
-                <Button 
-                  className="flex-1 gap-2 h-12" 
-                  size="lg" 
-                  variant="outline"
-                  onClick={() => handleTip(10)}
-                  disabled={isTipping}
-                >
-                  <Gift className="w-5 h-5" />
-                  {isTipping ? "Sending..." : "Tip 10 Pulse"}
-                </Button>
+                <TippingSection 
+                  creatorId={companion.creator_id}
+                  creatorName={companion.creator_name}
+                />
                 <Button className="flex-1 gap-2 h-12" size="lg" variant="outline">
                   <Share2 className="w-5 h-5" />
                   Share

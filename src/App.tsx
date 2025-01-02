@@ -14,6 +14,7 @@ import SubmitCompanion from "./components/companion/SubmitCompanion";
 import { AuthProvider } from "./components/providers/AuthProvider";
 import BookmarksPage from "./components/companion/BookmarksPage";
 import CompanionsPage from "./components/companion/companions-page/CompanionsPage";
+import TippingPage from "./components/companion/TippingPage";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
             <Route path="/user/:userId" element={<UserProfile />} />
             <Route path="/bookmarks" element={<BookmarksPage />} />
             <Route path="/companions/:companionId" element={<CompanionsPage />} />
+            <Route path="/companions/:companionId/tip" element={<TippingPage />} />
           </Routes>
         </div>
       </Suspense>

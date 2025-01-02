@@ -74,22 +74,22 @@ export const sendTip = async (
   senderId: string,
   recipientId: string,
   amount: number
-): Promise<void> => {
+): Promise<{ success: boolean; message: string }> => {
   const { session } = useAuth();
   
   if (!session) {
-    throw new Error('User not authenticated');
+    return { success: false, message: 'User not authenticated' };
   }
 
   if (amount <= 0) {
-    throw new Error('Tip amount must be positive');
+    return { success: false, message: 'Tip amount must be positive' };
   }
 
   try {
     // Get sender's balance
     const senderBalance = await getPulseBalance(senderId);
     if (senderBalance < amount) {
-      throw new Error('Insufficient Pulse balance');
+      return { success: false, message: 'Insufficient Pulse balance' };
     }
 
     // Get recipient's balance
@@ -98,9 +98,17 @@ export const sendTip = async (
     // Update balances
     await updatePulseBalance(senderId, senderBalance - amount);
     await updatePulseBalance(recipientId, recipientBalance + amount);
+    
+    return { 
+      success: true, 
+      message: `Successfully sent ${amount} Pulse to ${recipientId}` 
+    };
   } catch (error) {
     console.error('Error sending tip:', error);
-    throw error;
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : 'Failed to send tip' 
+    };
   }
 };
 
