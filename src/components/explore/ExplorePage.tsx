@@ -15,23 +15,32 @@ const ExplorePage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const fetchPaginatedCompanions = async (page: number) => {
+    try {
+      const data = await fetchCompanions("popular", page);
+      return data;
+    } catch (error) {
+      console.error("Error fetching companions:", error);
+      return [];
+    }
+  };
+
   useEffect(() => {
-    const fetchCompanionsData = async () => {
+    const fetchInitialCompanions = async () => {
       setLoading(true);
       try {
-        const data = await fetchCompanions("popular");
+        const data = await fetchPaginatedCompanions(1);
         setCompanions(data);
       } finally {
         setLoading(false);
       }
     };
-    fetchCompanionsData();
+    fetchInitialCompanions();
   }, []);
 
   const handleFiltersChange = (filters: string[]) => {
     setActiveFilters(filters);
   };
-
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
@@ -56,7 +65,6 @@ const ExplorePage = () => {
 
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Filter Sidebar */}
           <div className="w-full md:w-80 shrink-0">
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl overflow-hidden sticky top-24">
               <div className="p-6 border-b border-gray-800">
@@ -72,7 +80,6 @@ const ExplorePage = () => {
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="flex-1">
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -85,34 +92,17 @@ const ExplorePage = () => {
                   </Badge>
                 </div>
                 
-                  {loading ? (
-                    <div className="flex flex-col items-center justify-center p-8 space-y-4">
-                      <LoadingSpinner className="w-12 h-12 text-green-400 animate-spin" />
-                      <p className="text-gray-400">Loading companions...</p>
-                    </div>
-                  ) : companions.length > 0 ? (
-                    <Gallery fetchCompanions={async () => companions} activeFilters={activeFilters} />
-                  ) : (
-                    <Card className="p-8 text-center bg-gray-900/50 backdrop-blur-sm">
-                      <div className="max-w-md mx-auto">
-                        <img 
-                          src="/images/empty-state.svg" 
-                          alt="No companions found"
-                          className="w-48 h-48 mx-auto mb-4"
-                        />
-                        <h3 className="text-xl font-semibold mb-2 text-white">No companions found</h3>
-                        <p className="text-gray-400 mb-4">
-                          Try adjusting your filters or check back later for new companions.
-                        </p>
-                        <button
-                          onClick={() => setActiveFilters([])}
-                          className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                        >
-                          Clear Filters
-                        </button>
-                      </div>
-                    </Card>
-                  )}
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                    <LoadingSpinner className="w-12 h-12 text-green-400 animate-spin" />
+                    <p className="text-gray-400">Loading companions...</p>
+                  </div>
+                ) : (
+                  <Gallery 
+                    fetchCompanions={fetchPaginatedCompanions} 
+                    activeFilters={activeFilters} 
+                  />
+                )}
             </div>
           </div>
         </div>
