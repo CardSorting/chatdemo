@@ -42,7 +42,11 @@ const SubmitCompanion = () => {
     }, []);
 
     const getPreviewImage = (): string => {
-        return formData.avatar_url || "https://via.placeholder.com/150";
+        if (formData.avatar_url) {
+            return formData.avatar_url;
+        }
+        const seed = formData.name || "default";
+        return `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
     };
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,14 +228,6 @@ const SubmitCompanion = () => {
                                 Content
                                 {formData.description && <Check className="w-4 h-4 ml-2 text-green-500" />}
                             </TabsTrigger>
-                            <TabsTrigger 
-                                value="discovery"
-                                className="flex-1 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
-                            >
-                                <Tags className="w-4 h-4 mr-2" />
-                                Discovery
-                                {formData.categories.length > 0 && <Check className="w-4 h-4 ml-2 text-green-500" />}
-                            </TabsTrigger>
                         </TabsList>
 
                         <form onSubmit={handleSubmit} className="space-y-8">
@@ -381,7 +377,11 @@ const SubmitCompanion = () => {
                                         className="bg-black/50 border-green-500/20 text-white min-h-[120px] focus:border-green-500 transition-colors"
                                         placeholder="Describe your companion's personality, expertise, and what makes them unique..."
                                         required
+                                        maxLength={300}
                                     />
+                                    <p className="text-xs text-gray-400 text-right">
+                                        {formData.description.length}/300 characters
+                                    </p>
                                 </div>
                             </TabsContent>
 
