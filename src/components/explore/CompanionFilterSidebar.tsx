@@ -4,28 +4,39 @@ import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { getAvailableFilters } from "../../services/companion/companionService";
 
-interface CompanionFilterSidebarProps {
-  onFiltersChange: (filters: string[]) => void;
+interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
 }
 
-const CompanionFilterSidebar: React.FC<CompanionFilterSidebarProps> = ({ onFiltersChange }) => {
-  const [categories, setCategories] = useState([]);
+interface CompanionFilterSidebarProps {
+  onFiltersChange: (filters: string[]) => void;
+  activeFilters: string[];
+}
+
+const CompanionFilterSidebar: React.FC<CompanionFilterSidebarProps> = ({
+  onFiltersChange,
+  activeFilters
+}) => {
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState({});
+  const [selectedCategories, setSelectedCategories] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchFilters = async () => {
       try {
         const { categories } = await getAvailableFilters();
         setCategories(categories);
-        
+
         // Initialize selected categories state
         const initialCategories = categories.reduce((acc, category) => {
-          acc[category.id] = false;
+          acc[category.id] = activeFilters.includes(category.id);
           return acc;
-        }, {});
-        
+        }, {} as Record<string, boolean>);
+
         setSelectedCategories(initialCategories);
       } catch (error) {
         console.error('Error fetching filters:', error);
@@ -36,19 +47,26 @@ const CompanionFilterSidebar: React.FC<CompanionFilterSidebarProps> = ({ onFilte
     };
 
     fetchFilters();
-  }, []);
+  }, [activeFilters]);
+
+  const prevActiveCategories = React.useRef<string[]>([]);
 
   useEffect(() => {
     const activeCategories = Object.keys(selectedCategories).filter(
       (categoryId) => selectedCategories[categoryId]
     );
-    onFiltersChange(activeCategories);
+
+    // Only update if the active categories have actually changed
+    if (JSON.stringify(activeCategories) !== JSON.stringify(prevActiveCategories.current)) {
+      onFiltersChange(activeCategories);
+      prevActiveCategories.current = activeCategories;
+    }
   }, [selectedCategories, onFiltersChange]);
 
-  const handleCategoryChange = (categoryId: string) => {
+  const handleCategoryChange = (categoryId: string, checked: boolean | "indeterminate") => {
     setSelectedCategories(prev => ({
       ...prev,
-      [categoryId]: !prev[categoryId]
+      [categoryId]: checked === true
     }));
   };
 
@@ -69,16 +87,23 @@ const CompanionFilterSidebar: React.FC<CompanionFilterSidebarProps> = ({ onFilte
         <h4 className="text-sm font-medium text-gray-400 mb-2">Categories</h4>
         <div className="space-y-2">
           {categories.map((category) => (
-            <div key={category.id} className="flex items-center space-x-2">
+            <div
+              key={category.id}
+              className={`flex items-center space-x-2 p-2 rounded-lg ${
+                selectedCategories[category.id] ? 'bg-green-500/10' : ''
+              }`}
+            >
               <Checkbox
                 id={category.id}
-                checked={selectedCategories[category.id]}
-                onCheckedChange={() => handleCategoryChange(category.id)}
+                checked={!!selectedCategories[category.id]}
+                onCheckedChange={(checked) => handleCategoryChange(category.id, checked)}
                 className="border-green-500/50 data-[state=checked]:bg-green-500"
               />
               <Label
                 htmlFor={category.id}
-                className="text-sm font-medium leading-none text-gray-400"
+                className={`text-sm font-medium leading-none ${
+                  selectedCategories[category.id] ? 'text-green-400' : 'text-gray-400'
+                }`}
               >
                 {category.name}
               </Label>
@@ -96,7 +121,7 @@ const CompanionFilterSidebar: React.FC<CompanionFilterSidebarProps> = ({ onFilte
             categories.reduce((acc, category) => {
               acc[category.id] = false;
               return acc;
-            }, {})
+            }, {} as Record<string, boolean>)
           );
         }}
       >

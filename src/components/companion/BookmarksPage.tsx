@@ -101,7 +101,10 @@ const BookmarksPage = () => {
                   <SlidersHorizontal className="w-5 h-5 text-green-400" />
                   <h3 className="text-lg font-semibold text-white">Filters</h3>
                 </div>
-                <CompanionFilterSidebar onFiltersChange={handleFiltersChange} />
+                <CompanionFilterSidebar 
+                  onFiltersChange={handleFiltersChange}
+                  activeFilters={activeFilters}
+                />
               </div>
             </div>
           </div>
