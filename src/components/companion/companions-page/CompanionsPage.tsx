@@ -6,7 +6,6 @@ import { useToast } from "../../../components/ui/use-toast";
 import { cn } from "../../../lib/utils";
 import { HeroSection } from "./components/HeroSection";
 import { ScreenshotsSection } from "./components/ScreenshotsSection";
-import { FeaturesSection } from "./components/FeaturesSection";
 import { ReviewsSection } from "./components/ReviewsSection";
 import { SidebarSection } from "./components/SidebarSection";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
@@ -49,29 +48,6 @@ export default function CompanionsPage() {
   if (isError || !companion) {
     return <div className="container mx-auto px-4 py-8">Failed to load companion details</div>;
   }
-
-  const features = [
-    {
-      icon: Brain,
-      title: "Advanced AI",
-      description: "Powered by state-of-the-art language models",
-    },
-    {
-      icon: Clock,
-      title: "24/7 Availability",
-      description: "Always ready to chat when you need",
-    },
-    {
-      icon: Zap,
-      title: "Fast Responses",
-      description: "Quick, natural conversation flow",
-    },
-    {
-      icon: Globe,
-      title: "Multilingual",
-      description: "Supports multiple languages",
-    },
-  ];
 
   const reviews = [
     {
@@ -142,7 +118,6 @@ export default function CompanionsPage() {
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-12">
-            <FeaturesSection features={features} />
             <ReviewsSection reviews={reviews} />
           </div>
           <SidebarSection companion={companion} similarCompanions={similarCompanions} />
