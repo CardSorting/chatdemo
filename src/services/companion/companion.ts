@@ -58,6 +58,16 @@ export const getCompanions = async (sortBy: string) => {
 /**
  * Fetch the total count of companions (for pagination, etc.).
  */
+export const getAvailableFilters = async () => {
+    const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name', { ascending: true });
+
+    if (error) throw error;
+    return data;
+};
+
 export const fetchCompanionCount = async () => {
   const { count, error } = await supabase
     .from('companions')
@@ -128,8 +138,8 @@ export const createCompanion = async (companion: {
   description: string;
   avatar_url: string;
   creator_name: string;
-  tags: string[];
   chat_url: string;
+  categories: string[];
 }) => {
   const { data, error } = await supabase
     .from('companions')
