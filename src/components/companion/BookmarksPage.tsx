@@ -141,7 +141,7 @@ const BookmarksPage = () => {
               {hasCompanions ? (
                 <>
                   {/* Recent Bookmarks Section */}
-                  {recentCompanions.length > 0 && (
+                  {sortedCompanions.slice(0, 3).length > 0 && (
                     <section className="mb-12">
                       <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-semibold text-white flex items-center gap-3">
@@ -149,11 +149,11 @@ const BookmarksPage = () => {
                           Recently Bookmarked
                         </h2>
                         <Badge variant="secondary" className="bg-green-500/10 text-green-400">
-                          {recentCompanions.length} companions
+                          {sortedCompanions.slice(0, 3).length} companions
                         </Badge>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {recentCompanions.map((companion) => (
+                        {sortedCompanions.slice(0, 3).map((companion) => (
                           <div 
                             key={companion.id} 
                             className="group relative"
@@ -169,7 +169,7 @@ const BookmarksPage = () => {
                   )}
 
                   {/* All Bookmarks Section */}
-                  {otherCompanions.length > 0 && (
+                  {sortedCompanions.slice(3).length > 0 && (
                     <section>
                       <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-semibold text-white flex items-center gap-3">
@@ -177,11 +177,11 @@ const BookmarksPage = () => {
                           All Bookmarked Companions
                         </h2>
                         <Badge variant="secondary" className="bg-green-500/10 text-green-400">
-                          {otherCompanions.length} companions
+                          {sortedCompanions.slice(3).length} companions
                         </Badge>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {otherCompanions.map((companion) => (
+                        {sortedCompanions.slice(3).map((companion) => (
                           <div 
                             key={companion.id} 
                             className="group relative"
