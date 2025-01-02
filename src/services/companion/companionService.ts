@@ -1,5 +1,20 @@
 import { supabase } from "../../lib/supabase";
 
+export const getCompanionById = async (companionId: string) => {
+  const { data, error } = await supabase
+    .from('companions')
+    .select('*')
+    .eq('id', companionId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching companion:', error);
+    throw error;
+  }
+
+  return data;
+};
+
 export const getAvailableFilters = async () => {
   const { data: categories, error: categoriesError } = await supabase
     .from('categories')
