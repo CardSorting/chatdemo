@@ -89,24 +89,6 @@ const BookmarksPage = () => {
               </p>
             </div>
           </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 transform hover:scale-[1.02] transition-all">
-              <div className="flex items-center gap-3 mb-2">
-                <BookmarkIcon className="w-5 h-5 text-green-400" />
-                <span className="text-gray-400 text-sm">Total Bookmarks</span>
-              </div>
-              <span className="text-3xl font-bold text-white">{companions?.length || 0}</span>
-            </div>
-            <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 transform hover:scale-[1.02] transition-all">
-              <div className="flex items-center gap-3 mb-2">
-                <Clock className="w-5 h-5 text-green-400" />
-                <span className="text-gray-400 text-sm">Recent Activity</span>
-              </div>
-              <span className="text-3xl font-bold text-white">{recentCompanions.length}</span>
-            </div>
-          </div>
         </div>
       </div>
 
