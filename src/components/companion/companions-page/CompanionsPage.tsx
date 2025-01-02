@@ -78,19 +78,25 @@ export default function CompanionsPage() {
       user: "User1",
       rating: 5,
       comment: "Amazing companion! The conversations feel incredibly natural and engaging.",
-      date: "2 days ago",
+      date: "2025-01-01",
+      helpfulCount: 12,
+      isVerified: true,
     },
     {
       user: "User2",
       rating: 5,
       comment: "I'm impressed by how well it understands context and maintains meaningful dialogue.",
-      date: "3 days ago",
+      date: "2025-01-02",
+      helpfulCount: 8,
+      isVerified: false,
     },
     {
       user: "User3",
       rating: 4,
       comment: "Great experience overall, though sometimes responses could be faster.",
-      date: "5 days ago",
+      date: "2025-01-03",
+      helpfulCount: 5,
+      isVerified: true,
     },
   ];
 
