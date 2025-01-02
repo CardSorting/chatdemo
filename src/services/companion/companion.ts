@@ -1,18 +1,12 @@
 import { Tables } from "../../types/supabase";
 import { supabase } from "../../lib/supabase";
-
-export interface GetCompanionsResponse {
-  data: Tables<"companions">[];
-  total: number;
-  page: number;
-  hasMore: boolean;
-}
+import { SearchResponse } from "../../types/search";
 
 export const getCompanions = async (
   query: string,
   page: number,
   pageSize = 10
-): Promise<GetCompanionsResponse> => {
+): Promise<SearchResponse> => {
   const offset = (page - 1) * pageSize;
   
   const { data, count, error } = await supabase
@@ -28,5 +22,7 @@ export const getCompanions = async (
     total: count || 0,
     page,
     hasMore: (count || 0) > offset + pageSize,
+    query,
+    timestamp: new Date().toISOString(),
   };
 };

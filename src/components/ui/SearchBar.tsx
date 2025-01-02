@@ -9,10 +9,42 @@ interface SearchBarProps {
   onSelect: (companionId: string) => void;
 }
 
+const highlightText = (text: string, matches: { start: number; end: number }[]) => {
+  if (!matches.length) return text;
+
+  let highlightedText = [];
+  let lastIndex = 0;
+
+  matches.forEach((match) => {
+    // Add text before the match
+    highlightedText.push(text.slice(lastIndex, match.start));
+    // Add highlighted match
+    highlightedText.push(
+      <span className="bg-green-500/20 text-green-400" key={match.start}>
+        {text.slice(match.start, match.end)}
+      </span>
+    );
+    lastIndex = match.end;
+  });
+
+  // Add remaining text after last match
+  highlightedText.push(text.slice(lastIndex));
+
+  return highlightedText;
+};
+
 export const SearchBar = ({ onSelect }: SearchBarProps) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const { data, isLoading, isError, isFetching, fetchNextPage, hasNextPage } = useSearch(query);
+  const { 
+    data, 
+    isLoading, 
+    isError, 
+    isFetching, 
+    fetchNextPage, 
+    hasNextPage 
+  } = useSearch(query);
+  
   const results = data?.pages.flatMap(page => page.data) || [];
   const totalResults = data?.pages[0]?.total || 0;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,34 +108,43 @@ export const SearchBar = ({ onSelect }: SearchBarProps) => {
                 Failed to load search results
               </div>
             ) : results.length > 0 ? (
-              results.map((companion) => (
-                <div
-                  key={companion.id}
-                  role="option"
-                  aria-selected="false"
-                  className="p-3 hover:bg-gray-800/50 cursor-pointer transition-colors"
-                  onClick={() => {
-                    onSelect(companion.id);
-                    setIsOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={companion.avatar_url}
-                      alt={companion.name}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <h3 className="text-white font-medium">
-                        {companion.name}
-                      </h3>
-                      <p className="text-sm text-white">
-                        {companion.description}
-                      </p>
+              results.map((companion, index) => {
+                const highlights = data?.pages
+                  .flatMap(page => page.highlightedResults)
+                  .find(hr => hr.field === "name" && hr.matches.length > 0);
+
+                return (
+                  <div
+                    key={companion.id}
+                    role="option"
+                    aria-selected="false"
+                    className="p-3 hover:bg-gray-800/50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      onSelect(companion.id);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={companion.avatar_url}
+                        alt={companion.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <h3 className="text-white font-medium">
+                          {highlights ? 
+                            highlightText(companion.name, highlights.matches) :
+                            companion.name
+                          }
+                        </h3>
+                        <p className="text-sm text-white">
+                          {companion.description}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="p-4 text-gray-400 text-center">
                 No results found
