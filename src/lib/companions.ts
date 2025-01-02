@@ -1,159 +1,104 @@
-import { supabase } from "./supabase";
+import { supabase } from './supabase';
 
 export interface Companion {
   id: string;
   name: string;
   description: string;
   avatar_url: string;
-  creator_id: string;
   creator_name: string;
+  tags: string[];
   likes_count: number;
   messages_count: number;
-  tags: string[];
   chat_url: string;
   created_at: string;
   updated_at: string;
-  status: "pending" | "approved" | "rejected";
-  moderation_feedback?: string;
-  moderated_at?: string;
-  moderated_by?: string;
 }
 
-export interface CompanionAnalytics {
-  id: string;
-  name: string;
-  creator_id: string;
-  unique_likes: number;
-  unique_chatters: number;
-  unique_viewers: number;
-  total_messages: number;
-  total_views: number;
-}
-
-export const createCompanion = async (
-  companion: Omit<
-    Companion,
-    | "id"
-    | "created_at"
-    | "updated_at"
-    | "status"
-    | "moderation_feedback"
-    | "moderated_at"
-    | "moderated_by"
-  >,
-) => {
+export const fetchCompanions = async (page = 1, pageSize = 6) => {
   const { data, error } = await supabase
-    .from("companions")
-    .insert({ ...companion, status: "pending" })
-    .select()
-    .single();
+    .from('companions')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range((page - 1) * pageSize, page * pageSize - 1);
 
   if (error) throw error;
-  return data;
+  return data as Companion[];
 };
 
-export const updateCompanion = async (
-  id: string,
-  updates: Partial<Companion>,
-) => {
+export const fetchCompanionCount = async () => {
+  const { count, error } = await supabase
+    .from('companions')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) throw error;
+  return count || 0;
+};
+
+export const fetchLikedStatuses = async (companionIds: string[], userId: string) => {
   const { data, error } = await supabase
-    .from("companions")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
+    .from('likes')
+    .select('companion_id')
+    .in('companion_id', companionIds)
+    .eq('user_id', userId);
 
   if (error) throw error;
-  return data;
-};
-
-export const deleteCompanion = async (id: string) => {
-  const { error } = await supabase.from("companions").delete().eq("id", id);
-
-  if (error) throw error;
-};
-
-export const fetchCompanions = async (options?: { includeAll?: boolean }) => {
-  let query = supabase.from("companions").select("*");
-
-  if (!options?.includeAll) {
-    query = query.eq("status", "approved");
-  }
-
-  const { data, error } = await query.order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data;
-};
-
-export const moderateCompanion = async (
-  id: string,
-  status: "approved" | "rejected",
-  feedback?: string,
-  moderatorId?: string,
-) => {
-  const updates: Partial<Companion> = {
-    status,
-    moderation_feedback: feedback,
-    moderated_at: new Date().toISOString(),
-    moderated_by: moderatorId,
-  };
-
-  return updateCompanion(id, updates);
-};
-
-// Stats tracking functions
-export const trackCompanionAction = async (
-  companionId: string,
-  actionType: "like" | "chat" | "view",
-) => {
-  const { error } = await supabase.from("companion_stats").insert({
-    companion_id: companionId,
-    action_type: actionType,
+  
+  const likedMap: Record<string, boolean> = {};
+  data.forEach((like) => {
+    likedMap[like.companion_id] = true;
   });
-
-  if (error) throw error;
+  return likedMap;
 };
 
-export const isCompanionLiked = async (companionId: string) => {
-  const { data, error } = await supabase
-    .from("companion_stats")
-    .select("id")
-    .eq("companion_id", companionId)
-    .eq("action_type", "like")
-    .eq("user_id", supabase.auth.getUser())
+export const toggleCompanionLike = async (companionId: string, userId: string) => {
+  // Check if already liked
+  const { data: existingLike } = await supabase
+    .from('likes')
+    .select()
+    .eq('companion_id', companionId)
+    .eq('user_id', userId)
     .single();
 
-  if (error && error.code !== "PGRST116") throw error;
-  return !!data;
-};
-
-export const toggleCompanionLike = async (companionId: string) => {
-  const isLiked = await isCompanionLiked(companionId);
-
-  if (isLiked) {
+  if (existingLike) {
+    // Unlike
     const { error } = await supabase
-      .from("companion_stats")
+      .from('likes')
       .delete()
-      .eq("companion_id", companionId)
-      .eq("action_type", "like")
-      .eq("user_id", supabase.auth.getUser());
-
+      .eq('companion_id', companionId)
+      .eq('user_id', userId);
     if (error) throw error;
+    return false;
   } else {
-    await trackCompanionAction(companionId, "like");
+    // Like
+    const { error } = await supabase
+      .from('likes')
+      .insert({ companion_id: companionId, user_id: userId });
+    if (error) throw error;
+    return true;
   }
-
-  return !isLiked;
 };
 
-export const fetchCompanionAnalytics = async (companionId: string) => {
+export const trackCompanionAction = async (companionId: string, action: 'chat' | 'view') => {
+  const { error } = await supabase
+    .from('companion_actions')
+    .insert({ companion_id: companionId, action });
+  if (error) throw error;
+};
+
+export const createCompanion = async (companion: {
+  name: string;
+  description: string;
+  avatar_url: string;
+  creator_name: string;
+  tags: string[];
+  chat_url: string;
+}) => {
   const { data, error } = await supabase
-    .from("companion_analytics")
-    .select("*")
-    .eq("id", companionId)
+    .from('companions')
+    .insert(companion)
+    .select()
     .single();
 
   if (error) throw error;
-  return data as CompanionAnalytics;
+  return data as Companion;
 };
