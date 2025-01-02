@@ -1,23 +1,93 @@
-import React from "react";
+import React, { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
-import { Companion } from "../../lib/companions";
-import { useCompanionLikes } from "../../hooks/useCompanionLikes";
+import { useToast } from "@components/ui/use-toast";
+import { useAuth } from "@hooks/useAuth";
+import { likeCompanion } from "@services/companion/companionService";
+
+interface Companion {
+  id: string;
+  name: string;
+  creator_name: string;
+  avatar_url?: string;
+  description?: string;
+  likes_count: number;
+  messages_count: number;
+  chat_url?: string;
+}
 
 interface CompanionCardProps {
   companion: Companion;
 }
 
 const CompanionCard = ({ companion }: CompanionCardProps) => {
-  const { isLiked, localLikesCount, handleLike } = useCompanionLikes(
-    companion.id,
-    companion.likes_count
-  );
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Local state for optimistic updates
+  const [isLiked, setIsLiked] = useState(false);
+  const [localLikesCount, setLocalLikesCount] = useState(companion.likes_count);
+
+  // Define the like mutation
+  const likeMutation = useMutation({
+    mutationFn: () => likeCompanion(companion.id),
+    onMutate: async () => {
+      // Cancel any outgoing refetches so we don't overwrite optimistic updates
+      await queryClient.cancelQueries({ queryKey: ["companions"] });
+
+      // Snapshot the previous data
+      const previousCompanions = queryClient.getQueryData(["companions"]);
+
+      // Optimistically update the local UI
+      setLocalLikesCount((prev) => prev + 1);
+      setIsLiked(true);
+
+      // Return context so we can roll back if there's an error
+      return { previousCompanions };
+    },
+    onSuccess: () => {
+      // Invalidate the companions query so React Query refetches data
+      queryClient.invalidateQueries({ queryKey: ["companions"] });
+      toast({
+        title: "Liked!",
+        description: "Your like has been recorded.",
+      });
+    },
+    onError: (_error, _variables, context) => {
+      // Roll back local changes if the mutation fails
+      if (context?.previousCompanions) {
+        queryClient.setQueryData(["companions"], context.previousCompanions);
+      }
+      setLocalLikesCount(companion.likes_count);
+      setIsLiked(false);
+      toast({
+        title: "Error",
+        description: "Failed to like companion",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: ["companions"] });
+    },
+  });
 
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    handleLike();
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to like companions",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!isLiked) {
+      likeMutation.mutate();
+    }
   };
 
   return (
@@ -28,12 +98,20 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
         className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         aria-label="Like companion"
       >
-        <div className={`w-8 h-8 flex items-center justify-center rounded-full border ${
-          isLiked 
-            ? 'bg-red-100 border-red-300' 
-            : 'bg-gray-100 border-gray-300 dark:bg-gray-700 dark:border-gray-600'
-        }`}>
-          <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>❤️</span>
+        <div
+          className={`w-8 h-8 flex items-center justify-center rounded-full border ${
+            isLiked
+              ? "bg-red-100 border-red-300"
+              : "bg-gray-100 border-gray-300 dark:bg-gray-700 dark:border-gray-600"
+          }`}
+        >
+          <span
+            className={`text-sm ${
+              isLiked ? "text-red-500" : "text-gray-500 dark:text-gray-400"
+            }`}
+          >
+            ❤️
+          </span>
         </div>
       </button>
 
@@ -66,9 +144,13 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
       <div className="mt-auto flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className={`text-sm ${
-              isLiked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'
-            }`}>
+            <span
+              className={`text-sm ${
+                isLiked
+                  ? "text-red-500"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
               {localLikesCount} Likes
             </span>
           </div>
@@ -82,7 +164,11 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
           asChild
           className="bg-blue-600 hover:bg-blue-700 text-white"
         >
-          <a href={companion.chat_url} target="_blank" rel="noopener noreferrer">
+          <a
+            href={companion.chat_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Chat
           </a>
         </Button>
