@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Companion, fetchCompanions } from "@/lib/companions";
-import { Card } from "@/components/ui/card";
+import { Companion, fetchCompanions } from "../../services/companion/companion";
+import { Card } from "../../components/ui/card";
 import { Loader2 } from "lucide-react";
 import ChatDemo from "../landing/ChatDemo";
 

@@ -1,6 +1,7 @@
-import { supabase } from './supabase';
-import { Database } from '../types/supabase';
+import { supabase } from '../../lib/supabase';
+import { Database } from '../../types/supabase';
 
+// We assume the "companions" table exists with these columns
 export type Companion = Database['public']['Tables']['companions']['Row'] & {
   creator_name: string;
   likes_count: number;
@@ -9,6 +10,10 @@ export type Companion = Database['public']['Tables']['companions']['Row'] & {
   status?: 'active' | 'pending' | 'suspended';
 };
 
+/**
+ * Fetch a paginated list of companions,
+ * ordered by created_at descending.
+ */
 export const fetchCompanions = async (page = 1, pageSize = 6) => {
   const { data, error } = await supabase
     .from('companions')
@@ -20,6 +25,12 @@ export const fetchCompanions = async (page = 1, pageSize = 6) => {
   return data as Companion[];
 };
 
+/**
+ * Fetch all companions sorted by "sortBy" param:
+ * - "trending": by messages_count
+ * - "newest": by created_at
+ * - "most-liked": by likes_count
+ */
 export const getCompanions = async (sortBy: string) => {
   let query = supabase
     .from('companions')
@@ -44,6 +55,9 @@ export const getCompanions = async (sortBy: string) => {
   return data as Companion[];
 };
 
+/**
+ * Fetch the total count of companions (for pagination, etc.).
+ */
 export const fetchCompanionCount = async () => {
   const { count, error } = await supabase
     .from('companions')
@@ -53,50 +67,52 @@ export const fetchCompanionCount = async () => {
   return count || 0;
 };
 
-export const fetchLikedStatuses = async (companionIds: string[], userId: string) => {
+/**
+ * Increment the likes_count column for a given companion.
+ * (Direct Update Version)
+ */
+// export const incrementLikes = async (companionId: string) => {
+//   const { data, error } = await supabase
+//     .from('companions')
+//     .update({ likes_count: supabase.raw('likes_count + 1') })
+//     .eq('id', companionId)
+//     .select()
+//     .single();
+// 
+//   if (error) throw error;
+//   return data as Companion;
+// };
+
+/**
+ * OR (RPC Version)
+ * 
+ * If you've created a Postgres function increment_likes(p_companion_id uuid):
+ *
+ * CREATE OR REPLACE FUNCTION public.increment_likes(
+ *   p_companion_id uuid
+ * )
+ * RETURNS void
+ * LANGUAGE plpgsql
+ * AS $$
+ * BEGIN
+ *   UPDATE companions
+ *      SET likes_count = likes_count + 1
+ *    WHERE id = p_companion_id;
+ * END;
+ * $$;
+ */
+export const incrementLikes = async (companionId: string) => {
   const { data, error } = await supabase
-    .from('likes')
-    .select('companion_id')
-    .in('companion_id', companionIds)
-    .eq('user_id', userId);
+    .rpc('increment_likes', { p_companion_id: companionId });
 
   if (error) throw error;
-  
-  const likedMap: Record<string, boolean> = {};
-  data.forEach((like: { companion_id: string }) => {
-    likedMap[like.companion_id] = true;
-  });
-  return likedMap;
+  return data;
 };
 
-export const toggleCompanionLike = async (companionId: string, userId: string) => {
-  // Check if already liked
-  const { data: existingLike } = await supabase
-    .from('likes')
-    .select()
-    .eq('companion_id', companionId)
-    .eq('user_id', userId)
-    .single();
-
-  if (existingLike) {
-    // Unlike
-    const { error } = await supabase
-      .from('likes')
-      .delete()
-      .eq('companion_id', companionId)
-      .eq('user_id', userId);
-    if (error) throw error;
-    return false;
-  } else {
-    // Like
-    const { error } = await supabase
-      .from('likes')
-      .insert({ companion_id: companionId, user_id: userId });
-    if (error) throw error;
-    return true;
-  }
-};
-
+/**
+ * Track actions like "chat" or "view" if desired.
+ * (Assumes a companion_actions table)
+ */
 export const trackCompanionAction = async (companionId: string, action: 'chat' | 'view') => {
   const { error } = await supabase
     .from('companion_actions')
@@ -104,6 +120,9 @@ export const trackCompanionAction = async (companionId: string, action: 'chat' |
   if (error) throw error;
 };
 
+/**
+ * Create a new companion row.
+ */
 export const createCompanion = async (companion: {
   name: string;
   description: string;
@@ -122,6 +141,9 @@ export const createCompanion = async (companion: {
   return data as Companion;
 };
 
+/**
+ * Delete an existing companion row.
+ */
 export const deleteCompanion = async (companionId: string) => {
   const { error } = await supabase
     .from('companions')
@@ -132,6 +154,9 @@ export const deleteCompanion = async (companionId: string) => {
   return true;
 };
 
+/**
+ * Update the "status" field of a companion (moderation).
+ */
 export const moderateCompanion = async (companionId: string, status: 'active' | 'pending' | 'suspended') => {
   const { data, error } = await supabase
     .from('companions')
@@ -144,6 +169,9 @@ export const moderateCompanion = async (companionId: string, status: 'active' | 
   return data as Companion;
 };
 
+/**
+ * General-purpose companion update (partial fields).
+ */
 export const updateCompanion = async (companionId: string, updates: Partial<Companion>) => {
   const { data, error } = await supabase
     .from('companions')

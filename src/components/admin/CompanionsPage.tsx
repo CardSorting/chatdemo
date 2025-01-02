@@ -6,25 +6,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+} from "../../components/ui/table";
+import { Button } from "../../components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "../../components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import {
   MoreHorizontal,
   Plus,
@@ -33,7 +33,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "../../lib/auth";
 import {
   Companion,
   createCompanion,
@@ -41,7 +41,7 @@ import {
   fetchCompanions,
   updateCompanion,
   moderateCompanion,
-} from "@/lib/companions";
+} from "../../services/companion/companion";
 
 const CompanionsPage = () => {
   const [companions, setCompanions] = useState<Companion[]>([]);
@@ -74,7 +74,7 @@ const CompanionsPage = () => {
 
   const loadCompanions = async () => {
     try {
-      const data = await fetchCompanions({ includeAll: true });
+      const data = await fetchCompanions(1);
       setCompanions(data);
     } catch (error) {
       console.error("Error loading companions:", error);
@@ -115,15 +115,13 @@ const CompanionsPage = () => {
     }
   };
 
-  const handleModerate = async (status: "approved" | "rejected") => {
+  const handleModerate = async (status: "active" | "pending" | "suspended") => {
     if (!moderationDialog.companion) return;
 
     try {
       await moderateCompanion(
         moderationDialog.companion.id,
-        status,
-        moderationDialog.feedback,
-        user?.id,
+        status
       );
       await loadCompanions();
       setModerationDialog({ open: false, feedback: "" });
@@ -168,12 +166,14 @@ const CompanionsPage = () => {
 
   const getStatusBadgeClass = (status: Companion["status"]) => {
     switch (status) {
-      case "approved":
+      case "active":
         return "bg-green-500/10 text-green-500";
-      case "rejected":
+      case "suspended":
         return "bg-red-500/10 text-red-500";
-      default:
+      case "pending":
         return "bg-yellow-500/10 text-yellow-500";
+      default:
+        return "bg-gray-500/10 text-gray-500";
     }
   };
 
@@ -275,10 +275,10 @@ const CompanionsPage = () => {
         <TabsList className="grid w-full grid-cols-3 bg-black/50">
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="approved">Approved</TabsTrigger>
+          <TabsTrigger value="active">Active</TabsTrigger>
         </TabsList>
 
-        {["all", "pending", "approved"].map((tab) => (
+        {["all", "pending", "active"].map((tab) => (
           <TabsContent key={tab} value={tab}>
             <div className="rounded-lg border border-green-500/20 bg-black/50 backdrop-blur-sm">
               <Table>
@@ -416,18 +416,18 @@ const CompanionsPage = () => {
             </div>
             <div className="flex gap-2">
               <Button
-                onClick={() => handleModerate("approved")}
+                onClick={() => handleModerate("active")}
                 className="flex-1 bg-green-500 hover:bg-green-600"
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Approve
               </Button>
               <Button
-                onClick={() => handleModerate("rejected")}
+                onClick={() => handleModerate("suspended")}
                 className="flex-1 bg-red-500 hover:bg-red-600"
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                Reject
+                Suspend
               </Button>
             </div>
           </div>
