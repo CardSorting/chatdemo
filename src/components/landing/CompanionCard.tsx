@@ -6,58 +6,49 @@ import { Button } from "../ui/button";
 import { useToast } from "@components/ui/use-toast";
 import { useAuth } from "@hooks/useAuth";
 import { bookmarkCompanion } from "@services/companion/companionService";
-
-interface Companion {
-  id: string;
-  name: string;
-  creator_name: string;
-  avatar_url?: string;
-  description?: string;
-  messages_count: number;
-  chat_url?: string;
-}
+import { Bookmark, BookmarkCheck, Sparkles } from "lucide-react";
 
 interface CompanionCardProps {
-  companion: Companion;
+  companion: {
+    id: string;
+    name: string;
+    creator_name: string;
+    avatar_url?: string;
+    chat_url?: string;
+  };
 }
+
+const setTypes = ["Genesis", "Celestial", "Quantum", "Neo", "Alpha"];
 
 const CompanionCard = ({ companion }: CompanionCardProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { toast } = useToast();
-
-  // Local state for bookmark status
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [setInfo] = useState({
+    series: setTypes[Math.floor(Math.random() * setTypes.length)],
+    number: (Math.floor(Math.random() * 999) + 1).toString().padStart(3, "0")
+  });
 
-  // Define the bookmark mutation
   const bookmarkMutation = useMutation({
     mutationFn: () => bookmarkCompanion(companion.id),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["companions"] });
-      const previousCompanions = queryClient.getQueryData(["companions"]);
       setIsBookmarked(true);
-      return { previousCompanions };
+      return { previousCompanions: queryClient.getQueryData(["companions"]) };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companions"] });
-      toast({
-        title: "Bookmarked!",
-        description: "Companion added to your bookmarks",
-      });
+      toast({ title: "Bookmarked!", description: "Added to your collection" });
     },
     onError: (_error, _variables, context) => {
-      if (context?.previousCompanions) {
-        queryClient.setQueryData(["companions"], context.previousCompanions);
-      }
+      queryClient.setQueryData(["companions"], context?.previousCompanions);
       setIsBookmarked(false);
       toast({
         title: "Error",
         description: "Failed to bookmark companion",
         variant: "destructive",
       });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["companions"] });
     },
   });
 
@@ -75,72 +66,126 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
   };
 
   return (
-    <Card className="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col h-full relative">
-      {/* Bookmark button - positioned at top right */}
-      <button
-        onClick={handleBookmarkClick}
-        className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        aria-label="Bookmark companion"
-      >
-        <div
-          className={`w-8 h-8 flex items-center justify-center rounded-full border ${
-            isBookmarked
-              ? "bg-blue-100 border-blue-300"
-              : "bg-gray-100 border-gray-300 dark:bg-gray-700 dark:border-gray-600"
-          }`}
-        >
-          <span
-            className={`text-sm ${
-              isBookmarked ? "text-blue-500" : "text-gray-500 dark:text-gray-400"
-            }`}
-          >
-            📌
+    <Card className="group relative w-full max-w-sm mx-auto overflow-hidden rounded-2xl bg-gray-950">
+      {/* Animated Border Effects */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl opacity-75">
+        <div className="absolute inset-0 animate-border-flow" />
+      </div>
+      
+      {/* Animated Glow Effects */}
+      <div className="absolute inset-0 rounded-2xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/50 to-purple-500/50 blur-2xl opacity-0 group-hover:opacity-70 transition-all duration-700" />
+        <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0deg,purple_90deg,transparent_180deg)] animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      </div>
+
+      {/* Card Content */}
+      <div className="relative m-[2px] bg-gray-950 rounded-2xl z-20 overflow-hidden backdrop-blur-sm">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-800/30 bg-gray-900/50">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
+            <span className="text-sm font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              #{setInfo.number}
+            </span>
+          </div>
+          <span className="text-sm font-medium bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            {setInfo.series}
           </span>
         </div>
-      </button>
 
-      {/* Header section */}
-      <div className="flex items-center gap-4 mb-6">
-        <Avatar className="w-12 h-12">
-          <AvatarImage src={companion.avatar_url} />
-          <AvatarFallback className="bg-gray-300 dark:bg-gray-600 text-white">
-            {companion.name[0]}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {companion.name}
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {companion.creator_name}
-          </p>
+        {/* Image Container */}
+        <div className="relative aspect-square overflow-hidden">
+          <Avatar className="w-full h-full rounded-none">
+            <AvatarImage 
+              src={companion.avatar_url} 
+              className="object-cover w-full h-full transition-all duration-1000 ease-out group-hover:scale-110"
+            />
+            <AvatarFallback className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900">
+              {companion.name[0]}
+            </AvatarFallback>
+          </Avatar>
+          
+          {/* Image Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent opacity-60" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,rgba(0,0,0,0.8)_100%)] opacity-0 group-hover:opacity-100 transition-all duration-700" />
+          
+          {/* Title */}
+          <div className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-gray-950 via-gray-950/90 to-transparent transform translate-y-0 group-hover:translate-y-0 transition-transform duration-500">
+            <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-center mb-1 opacity-100 transform group-hover:scale-105 transition-all duration-500">
+              {companion.name}
+            </h3>
+            <p className="text-sm text-gray-400 text-center transform group-hover:translate-y-0 transition-transform duration-500">
+              by {companion.creator_name}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Description section */}
-      <div className="mb-6 h-32 overflow-y-auto">
-        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-          {companion.description}
-        </p>
-      </div>
-
-      {/* Chat button */}
-      <div className="mt-auto flex justify-end">
-        <Button
-          asChild
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          <a
-            href={companion.chat_url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Chat
-          </a>
-        </Button>
+        {/* Actions */}
+        <div className="p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="flex gap-2">
+            <Button
+              asChild
+              className="flex-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-medium 
+                         shadow-lg hover:shadow-blue-500/25 transform transition-all duration-500 
+                         hover:scale-[1.02] active:scale-95 group-hover:shadow-xl
+                         before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent 
+                         before:via-white/20 before:to-transparent before:translate-x-[-200%] 
+                         hover:before:translate-x-[200%] before:transition-transform before:duration-700"
+            >
+              <a href={companion.chat_url} target="_blank" rel="noopener noreferrer">
+                Start Chat
+              </a>
+            </Button>
+            <Button
+              onClick={handleBookmarkClick}
+              variant="ghost"
+              className="p-2 bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-300 
+                         transform hover:scale-105 active:scale-95"
+            >
+              {isBookmarked ? (
+                <BookmarkCheck className="w-5 h-5 text-blue-400 animate-bookmark" />
+              ) : (
+                <Bookmark className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors duration-300" />
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
     </Card>
   );
 };
 
 export default CompanionCard;
+
+// Add to your global CSS
+const style = `
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes border-flow {
+  0%, 100% { clip-path: inset(0 0 98% 0); }
+  25% { clip-path: inset(0 98% 0 0); }
+  50% { clip-path: inset(98% 0 0 0); }
+  75% { clip-path: inset(0 0 0 98%); }
+}
+
+@keyframes bookmark {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.animate-border-flow {
+  animation: border-flow 4s linear infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 4s linear infinite;
+}
+
+.animate-bookmark {
+  animation: bookmark 0.3s ease-in-out;
+}
+`

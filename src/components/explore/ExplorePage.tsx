@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../landing/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { getCompanions } from "../../services/companion/companion";
-import CompanionCard from "../landing/CompanionCard";
+import Gallery from "../landing/Gallery";
 import CompanionFilterSidebar from "./CompanionFilterSidebar";
 import { Card } from "../ui/card";
 import LoadingSpinner from "../ui/loading-spinner";
@@ -78,7 +78,7 @@ const ExplorePage = () => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 space-y-8">
+          <div className="flex-1">
             {/* Tabs */}
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4">
               <Tabs
@@ -125,19 +125,7 @@ const ExplorePage = () => {
                       <p className="text-gray-400">Loading companions...</p>
                     </div>
                   ) : filteredCompanions.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {filteredCompanions.map((companion) => (
-                        <div
-                          key={companion.id}
-                          className="group relative"
-                        >
-                          <div className="absolute -inset-2 bg-gradient-to-r from-green-500/10 to-green-400/10 rounded-xl blur-xl group-hover:blur-2xl transition-all opacity-0 group-hover:opacity-100" />
-                          <div className="relative transform hover:scale-[1.02] transition-all duration-300">
-                            <CompanionCard companion={companion} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <Gallery fetchCompanions={async () => filteredCompanions} />
                   ) : (
                     <Card className="p-8 text-center bg-gray-900/50 backdrop-blur-sm">
                       <div className="max-w-md mx-auto">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Companion } from "../../lib/companions";
+import { Companion } from "@lib/companions";
 import CompanionCard from "./CompanionCard";
 
 interface GalleryProps {
@@ -36,9 +36,11 @@ const Gallery = ({ fetchCompanions }: GalleryProps) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-3 gap-8 p-8">
       {companions.map((companion) => (
-        <CompanionCard key={companion.id} companion={companion} />
+        <div key={companion.id}>
+          <CompanionCard companion={companion} />
+        </div>
       ))}
     </div>
   );
