@@ -32,3 +32,15 @@ export const getCompanionStats = async (companionId: string) => {
     messagesCount: data.messages_count
   };
 };
+
+export const likeCompanion = async (companionId: string) => {
+  const { data, error } = await supabase
+    .rpc('increment_likes', { companion_id: companionId });
+
+  if (error) {
+    console.error('Error liking companion:', error);
+    throw error;
+  }
+
+  return data;
+};

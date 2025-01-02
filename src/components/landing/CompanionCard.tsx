@@ -1,21 +1,51 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Companion } from "../../lib/companions";
-import { getCompanionStats } from "../../services/companion/companionService";
+import { getCompanionStats, likeCompanion } from "../../services/companion/companionService";
 import { Skeleton } from "../ui/skeleton";
+import { useToast } from "../ui/use-toast";
 
 interface CompanionCardProps {
   companion: Companion;
 }
 
 const CompanionCard = ({ companion }: CompanionCardProps) => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [isLiked, setIsLiked] = useState(false);
+
   const { data: stats, isLoading, isError } = useQuery({
     queryKey: ['companionStats', companion.id],
     queryFn: () => getCompanionStats(companion.id)
   });
+
+  const likeMutation = useMutation({
+    mutationFn: () => likeCompanion(companion.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companionStats', companion.id] });
+      setIsLiked(true);
+      toast({
+        title: "Liked!",
+        description: "Your like has been recorded.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to like companion",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleLike = () => {
+    if (!isLiked) {
+      likeMutation.mutate();
+    }
+  };
 
   return (
     <Card className="group relative p-6 bg-black/50 backdrop-blur-sm border-green-500/20 hover:border-green-500/40 transition-all duration-300 flex flex-col h-full hover:shadow-[0_0_15px_rgba(34,197,94,0.2)] hover:-translate-y-1">
@@ -56,18 +86,27 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
       {/* Stats and action section */}
       <div className="mt-auto flex items-center justify-between relative">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-full border border-green-500/20 group-hover:border-green-500/30 transition-colors">
+          <div 
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={handleLike}
+          >
+            <div className={`w-8 h-8 flex items-center justify-center rounded-full border transition-colors ${
+              isLiked 
+                ? 'bg-green-500/20 border-green-500/50' 
+                : 'bg-gradient-to-br from-green-500/10 to-blue-500/10 border-green-500/20 group-hover:border-green-500/30'
+            }`}>
               {isLoading ? (
                 <Skeleton className="h-4 w-4 rounded-full" />
               ) : (
-                <span className="text-sm">❤️</span>
+                <span className={`text-sm ${isLiked ? 'text-green-400' : ''}`}>❤️</span>
               )}
             </div>
             {isLoading ? (
               <Skeleton className="h-4 w-8" />
             ) : (
-              <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+              <span className={`text-sm ${
+                isLiked ? 'text-green-400' : 'text-gray-400 group-hover:text-gray-300'
+              } transition-colors`}>
                 {isError ? 'Error' : stats?.likesCount}
               </span>
             )}
