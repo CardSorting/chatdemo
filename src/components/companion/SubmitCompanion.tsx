@@ -51,8 +51,8 @@ const SubmitCompanion = () => {
             {/* Matrix-style background overlay */}
             <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjEiIGZpbGw9InJnYmEoMCwyNTUsMCwwLjEpIi8+PC9nPjwvc3ZnPg==')] opacity-20 pointer-events-none animate-matrix-rain" />
 
-            <div className="max-w-4xl mx-auto relative">
-                <Card className="p-8 bg-black/50 backdrop-blur-sm border-green-500/20">
+            <div className="max-w-5xl mx-auto relative">
+                <Card className="p-8 bg-black/50 backdrop-blur-sm border-green-500/20 space-y-12">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="p-3 rounded-full bg-green-500/10">
                             <Bot className="w-8 h-8 text-green-500" />
@@ -67,64 +67,97 @@ const SubmitCompanion = () => {
                         </div>
                     </div>
 
-                    {/* Quick Guide */}
-                    <div className="mb-8 p-6 bg-green-500/5 border border-green-500/20 rounded-lg relative overflow-hidden">
-                        {/* Decorative corner sparkle */}
-                        <Sparkles className="absolute top-2 right-2 w-5 h-5 text-green-500/40" />
-
-                        <h3 className="flex items-center gap-2 text-green-400 font-semibold mb-4">
-                            <Info className="w-5 h-5" />
-                            Submission Guidelines
-                        </h3>
-                        <ul className="text-sm text-gray-400 space-y-2 list-none">
-                            <li className="flex items-center gap-2">
-                                <Bot className="w-4 h-4 text-green-500" />
-                                Choose a memorable name that reflects your companion's
-                                personality
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <Upload className="w-4 h-4 text-green-500" />
-                                Provide a clear avatar URL or let us generate one
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <Tags className="w-4 h-4 text-green-500" />
-                                Add relevant tags to help users find your companion
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <Link2 className="w-4 h-4 text-green-500" />
-                                Include the URL where users can chat with your companion
-                            </li>
-                        </ul>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-8">
-                        {/* Preview Card */}
+                    {/* Preview Section */}
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-semibold text-green-400 flex items-center gap-2">
+                            <Sparkles className="w-5 h-5" />
+                            Preview
+                        </h2>
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-                            <Card className="relative p-4 bg-black/60 backdrop-blur-sm border-green-500/20 flex items-center gap-4">
-                                <img
-                                    src={getPreviewImage()}
-                                    alt="Avatar preview"
-                                    className="w-20 h-20 rounded-full border-2 border-green-500/50"
-                                />
-                                <div>
-                                    <h3 className="text-xl font-semibold text-white">
-                                        {formData.name || "Your Companion Name"}
-                                    </h3>
-                                    <p className="text-sm text-gray-400">
-                                        {formData.description ||
-                                            "Companion description will appear here"}
-                                    </p>
-                                </div>
-                            </Card>
+                            <Card className="relative p-6 bg-black/60 backdrop-blur-sm border-green-500/20 flex items-center gap-6">
+                            <img
+                                src={getPreviewImage()}
+                                alt="Avatar preview"
+                                className="w-24 h-24 rounded-full border-2 border-green-500/50"
+                            />
+                            <div className="flex-1">
+                                <h3 className="text-2xl font-semibold text-white mb-2">
+                                    {formData.name || "Your Companion Name"}
+                                </h3>
+                                <p className="text-gray-400">
+                                    {formData.description ||
+                                        "Companion description will appear here"}
+                                </p>
+                                {formData.tags.length > 0 && (
+                                    <div className="flex gap-2 mt-3 flex-wrap">
+                                        {formData.tags.map((tag, index) => (
+                                            <span key={index} className="px-2 py-1 rounded-full bg-green-500/10 text-green-400 text-xs">
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
                         </div>
+                    </div>
 
+                    {/* Guidelines Section */}
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-semibold text-green-400 flex items-center gap-2">
+                            <Info className="w-5 h-5" />
+                            Guidelines
+                        </h2>
+                        <div className="p-6 bg-green-500/5 border border-green-500/20 rounded-lg relative overflow-hidden">
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {/* Basic Information */}
+                                <div>
+                                    <h3 className="text-green-400 font-medium mb-3">Basic Information</h3>
+                                    <ul className="text-sm text-gray-400 space-y-3 list-none">
+                                        <li className="flex items-start gap-2">
+                                            <Bot className="w-4 h-4 text-green-500 mt-0.5" />
+                                            <span>Choose a memorable name that reflects your companion's personality</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Upload className="w-4 h-4 text-green-500 mt-0.5" />
+                                            <span>Provide a clear avatar URL or let us generate one</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                {/* Discovery */}
+                                <div>
+                                    <h3 className="text-green-400 font-medium mb-3">Discovery</h3>
+                                    <ul className="text-sm text-gray-400 space-y-3 list-none">
+                                        <li className="flex items-start gap-2">
+                                            <Tags className="w-4 h-4 text-green-500 mt-0.5" />
+                                            <span>Add relevant tags to help users discover your companion (e.g., "Philosophy", "Science")</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <Link2 className="w-4 h-4 text-green-500 mt-0.5" />
+                                            <span>Include the URL where users can chat with your companion</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-12">
                         {/* Form Fields */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-6">
+                        <div className="space-y-8">
+                            <h2 className="text-xl font-semibold text-green-400 flex items-center gap-2">
+                                <Bot className="w-5 h-5" />
+                                Companion Details
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                <div className="space-y-8">
+                                    <h3 className="text-green-400 font-medium">Basic Information</h3>
+                                    <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="name" className="text-gray-200">
-                                        Companion Name *
+                                    <Label htmlFor="name" className="text-gray-200 flex items-center gap-1">
+                                        Companion Name
+                                        <span className="text-green-500 text-sm">*</span>
                                     </Label>
                                     <Input
                                         id="name"
@@ -156,8 +189,9 @@ const SubmitCompanion = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="chat_url" className="text-gray-200">
-                                        Chat URL *
+                                    <Label htmlFor="chat_url" className="text-gray-200 flex items-center gap-1">
+                                        Chat URL
+                                        <span className="text-green-500 text-sm">*</span>
                                     </Label>
                                     <Input
                                         id="chat_url"
@@ -171,12 +205,16 @@ const SubmitCompanion = () => {
                                         required
                                     />
                                 </div>
-                            </div>
+                                    </div>
+                                </div>
 
-                            <div className="space-y-6">
+                                <div className="space-y-8">
+                                    <h3 className="text-green-400 font-medium">Content & Discovery</h3>
+                                    <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="description" className="text-gray-200">
-                                        Description *
+                                    <Label htmlFor="description" className="text-gray-200 flex items-center gap-1">
+                                        Description
+                                        <span className="text-green-500 text-sm">*</span>
                                     </Label>
                                     <Textarea
                                         id="description"
@@ -191,8 +229,9 @@ const SubmitCompanion = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="tags" className="text-gray-200">
-                                        Tags *
+                                    <Label htmlFor="tags" className="text-gray-200 flex items-center gap-1">
+                                        Tags
+                                        <span className="text-green-500 text-sm">*</span>
                                     </Label>
                                     <Input
                                         id="tags"
@@ -204,6 +243,8 @@ const SubmitCompanion = () => {
                                         placeholder="e.g., Philosophy, Science, Art (comma-separated)"
                                         required
                                     />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -215,7 +256,7 @@ const SubmitCompanion = () => {
                             </div>
                         )}
 
-                        <div className="flex items-center justify-between pt-6 border-t border-green-500/20">
+                        <div className="flex items-center justify-between pt-8 border-t border-green-500/20">
                             <p className="text-sm text-gray-400">
                                 Your submission will be reviewed by our moderators
                             </p>
