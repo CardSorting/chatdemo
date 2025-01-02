@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { ArrowRight, Sparkles, Terminal, Zap } from "lucide-react";
 
 interface HeroSectionProps {

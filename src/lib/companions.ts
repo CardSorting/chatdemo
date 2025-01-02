@@ -12,6 +12,7 @@ export interface Companion {
   chat_url: string;
   created_at: string;
   updated_at: string;
+  status?: 'active' | 'pending' | 'suspended';
 }
 
 export const fetchCompanions = async (page = 1, pageSize = 6) => {
@@ -96,6 +97,40 @@ export const createCompanion = async (companion: {
   const { data, error } = await supabase
     .from('companions')
     .insert(companion)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Companion;
+};
+
+export const deleteCompanion = async (companionId: string) => {
+  const { error } = await supabase
+    .from('companions')
+    .delete()
+    .eq('id', companionId);
+
+  if (error) throw error;
+  return true;
+};
+
+export const moderateCompanion = async (companionId: string, status: 'active' | 'pending' | 'suspended') => {
+  const { data, error } = await supabase
+    .from('companions')
+    .update({ status })
+    .eq('id', companionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Companion;
+};
+
+export const updateCompanion = async (companionId: string, updates: Partial<Companion>) => {
+  const { data, error } = await supabase
+    .from('companions')
+    .update(updates)
+    .eq('id', companionId)
     .select()
     .single();
 
