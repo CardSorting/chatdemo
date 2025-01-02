@@ -140,26 +140,8 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
         </p>
       </div>
 
-      {/* Stats section */}
-      <div className="mt-auto flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span
-              className={`text-sm ${
-                isLiked
-                  ? "text-red-500"
-                  : "text-gray-500 dark:text-gray-400"
-              }`}
-            >
-              {localLikesCount} Likes
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {companion.messages_count} Messages
-            </span>
-          </div>
-        </div>
+      {/* Chat button */}
+      <div className="mt-auto flex justify-end">
         <Button
           asChild
           className="bg-blue-600 hover:bg-blue-700 text-white"
