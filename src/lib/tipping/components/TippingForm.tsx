@@ -2,15 +2,7 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gift } from "lucide-react";
-import { TippingState } from "../types/TippingTypes";
-
-interface TippingFormProps {
-  state: TippingState;
-  onTip: (amount: number) => void;
-  onCustomTip: () => void;
-  onCustomAmountChange: (value: string) => void;
-  setTipAmount: (amount: number) => void;
-}
+import { TippingState, TippingFormProps } from "../types";
 
 export function TippingForm({
   state,

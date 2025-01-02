@@ -2,14 +2,15 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../lib/auth";
 import { sendTip, getPulseBalance } from "../../../services/pulse/pulseService";
 import { toast } from "../../../components/ui/use-toast";
-import { TippingState, Tip, Tipper, Milestone } from "../types/TippingTypes";
+import { TippingState, Tip, Tipper, Milestone, UseTippingReturn } from "../types";
 
-export function useTipping(creatorId: string) {
+export function useTipping(creatorId: string): UseTippingReturn {
   const { session } = useAuth();
   const [state, setState] = useState<TippingState>({
     isTipping: false,
     showTipModal: false,
     tipAmount: 10,
+    selectedAmount: 10,
     customAmount: "",
     userBalance: 0,
     recentTips: [],
@@ -148,7 +149,7 @@ export function useTipping(creatorId: string) {
   };
 
   const setTipAmount = (amount: number) => {
-    setState(prev => ({ ...prev, tipAmount: amount }));
+    setState(prev => ({ ...prev, tipAmount: amount, selectedAmount: amount }));
   };
 
   return {
@@ -157,6 +158,7 @@ export function useTipping(creatorId: string) {
     setTipAmount,
     handleTip,
     handleCustomAmountChange,
-    validateAmount
+    validateAmount,
+    isLoading: state.isLoading
   };
 }

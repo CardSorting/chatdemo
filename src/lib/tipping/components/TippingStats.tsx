@@ -2,13 +2,8 @@ import { Card } from "../../../components/ui/card";
 import { Progress } from "../../../components/ui/progress";
 import { Trophy, History, Zap, Heart } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
-import { TippingState } from "../types/TippingTypes";
+import { TippingState, TippingStatsProps } from "../types";
 import { getProgressValue } from "../utils/tippingUtils";
-
-interface TippingStatsProps {
-  state: TippingState;
-  creatorName: string;
-}
 
 export function TippingStats({ state, creatorName }: TippingStatsProps) {
   return (
@@ -20,7 +15,7 @@ export function TippingStats({ state, creatorName }: TippingStatsProps) {
           <h3 className="font-medium text-lg">Creator Milestones</h3>
         </div>
         <div className="space-y-4">
-          {state.milestones.map((milestone, index) => (
+          {state.milestones?.map((milestone, index) => (
             <div key={index} className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>{milestone.description}</span>
@@ -44,7 +39,7 @@ export function TippingStats({ state, creatorName }: TippingStatsProps) {
           <h3 className="font-medium text-lg">Top Supporters</h3>
         </div>
         <div className="space-y-3">
-          {state.topTippers.map((tipper, index) => (
+          {state.topTippers?.map((tipper, index) => (
             <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
               <div className="flex items-center gap-2">
                 {index === 0 && <Trophy className="w-4 h-4 text-yellow-500" />}
@@ -65,7 +60,7 @@ export function TippingStats({ state, creatorName }: TippingStatsProps) {
           <h3 className="font-medium text-lg">Recent Activity</h3>
         </div>
         <div className="space-y-3">
-          {state.recentTips.map((tip, index) => (
+          {state.recentTips?.map((tip, index) => (
             <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">{tip.amount} Pulse</Badge>
