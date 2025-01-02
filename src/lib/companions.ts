@@ -20,6 +20,30 @@ export const fetchCompanions = async (page = 1, pageSize = 6) => {
   return data as Companion[];
 };
 
+export const getCompanions = async (sortBy: string) => {
+  let query = supabase
+    .from('companions')
+    .select('*');
+
+  switch (sortBy) {
+    case 'trending':
+      query = query.order('messages_count', { ascending: false });
+      break;
+    case 'newest':
+      query = query.order('created_at', { ascending: false });
+      break;
+    case 'most-liked':
+      query = query.order('likes_count', { ascending: false });
+      break;
+    default:
+      query = query.order('created_at', { ascending: false });
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data as Companion[];
+};
+
 export const fetchCompanionCount = async () => {
   const { count, error } = await supabase
     .from('companions')

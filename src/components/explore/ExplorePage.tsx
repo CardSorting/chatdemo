@@ -1,10 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import MainNav from "../layout/MainNav";
 import CompanionFilterSidebar from "./CompanionFilterSidebar";
 import Gallery from "../landing/Gallery";
 import Footer from "../landing/Footer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { getCompanions } from "../../lib/companions";
 
 const ExplorePage = () => {
+  const [activeTab, setActiveTab] = useState("trending");
+
+  const fetchCompanions = async (sortBy: string) => {
+    try {
+      const companions = await getCompanions(sortBy);
+      return companions;
+    } catch (error) {
+      console.error("Error fetching companions:", error);
+      return [];
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-black overflow-x-hidden">
       {/* Matrix-style background overlay with animated rain effect */}
@@ -16,22 +30,42 @@ const ExplorePage = () => {
       {/* Header */}
       <MainNav />
 
-      {/* Main content area: let this fill the vertical space */}
-      <div className="grid grid-cols-[256px_1fr] flex-1 pt-16 pb-8">
-        {/* Companion Filter Sidebar: wrap in a relative/sticky parent */}
-        <div className="border-r border-green-500/10 relative">
-          <div className="sticky top-16 h-full overflow-y-auto">
-            <CompanionFilterSidebar />
-          </div>
+      {/* Main content area */}
+      <div className="flex flex-1 pt-16 min-h-[calc(100vh-4rem)] pb-8">
+        {/* Companion Filter Sidebar */}
+        <div className="w-64 shrink-0">
+          <CompanionFilterSidebar />
         </div>
 
-        {/* Gallery */}
-        <main className="overflow-y-auto">
-          <Gallery />
+        {/* Gallery content */}
+        <main className="flex-1 px-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3 bg-black/50 border border-green-500/20 mb-4">
+              <TabsTrigger value="trending" className="data-[state=active]:bg-green-500/10">
+                Trending
+              </TabsTrigger>
+              <TabsTrigger value="newest" className="data-[state=active]:bg-green-500/10">
+                Newest
+              </TabsTrigger>
+              <TabsTrigger value="most-liked" className="data-[state=active]:bg-green-500/10">
+                Most Liked
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="trending">
+              <Gallery fetchCompanions={() => fetchCompanions("trending")} />
+            </TabsContent>
+            <TabsContent value="newest">
+              <Gallery fetchCompanions={() => fetchCompanions("newest")} />
+            </TabsContent>
+            <TabsContent value="most-liked">
+              <Gallery fetchCompanions={() => fetchCompanions("most-liked")} />
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
 
-      {/* Footer at the bottom */}
+      {/* Footer */}
       <Footer />
     </div>
   );

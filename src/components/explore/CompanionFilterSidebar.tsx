@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../ui/button";
-import { Slider } from "../ui/slider";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { getAvailableFilters } from "../../services/companion/companionService";
@@ -11,7 +10,6 @@ const CompanionFilterSidebar = () => {
   const [error, setError] = useState("");
 
   const [selectedCategories, setSelectedCategories] = useState({});
-  const [interactionLevel, setInteractionLevel] = useState([50]);
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -79,23 +77,6 @@ const CompanionFilterSidebar = () => {
         </div>
       </div>
 
-      {/* Interaction Level Filter */}
-      <div className="mb-6">
-        <h4 className="text-sm font-medium text-gray-400 mb-2">
-          Interaction Level
-        </h4>
-        <Slider
-          defaultValue={interactionLevel}
-          max={100}
-          step={1}
-          onValueChange={(value) => setInteractionLevel(value)}
-          className="[&>span:first-child]:bg-green-500"
-        />
-        <div className="text-xs text-gray-400 mt-1">
-          {interactionLevel[0]}% interaction
-        </div>
-      </div>
-
       {/* Reset Filters */}
       <Button
         variant="outline"
@@ -107,7 +88,6 @@ const CompanionFilterSidebar = () => {
               return acc;
             }, {})
           );
-          setInteractionLevel([50]);
         }}
       >
         Reset Filters
