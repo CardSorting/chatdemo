@@ -13,7 +13,7 @@ import SettingsPage from "./components/admin/SettingsPage";
 import SubmitCompanion from "./components/companion/SubmitCompanion";
 import { AuthProvider } from "./components/providers/AuthProvider";
 import BookmarksPage from "./components/companion/BookmarksPage";
-import CompanionsPage from "./components/companion/CompanionsPage";
+import CompanionsPage from "./components/companion/companions-page/CompanionsPage";
 
 function App() {
   return (
