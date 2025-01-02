@@ -1,112 +1,62 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
-// Get environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing Supabase configuration. Please check your .env file."
-  );
-}
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Singleton Supabase client instance
-let supabaseInstance: ReturnType<typeof createClient> | null = null;
-
-export const getSupabaseClient = () => {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-        storageKey: 'supabase.auth.token'
-      },
-      global: {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      }
-    });
-  }
-  return supabaseInstance;
-};
-
-// Enhanced connection test with detailed diagnostics
-const testConnection = async () => {
-  const supabase = getSupabaseClient();
-  
+export async function checkTableExists(tableName: string) {
   try {
-    // Create a timeout promise
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Connection timed out after 5 seconds'));
-      }, 5000);
-    });
+    // Check if table exists in public schema
+    const { data: tableExists, error: tableError } = await supabase
+      .from('information_schema.tables')
+      .select('table_name')
+      .eq('table_schema', 'public')
+      .eq('table_name', tableName)
+      .single();
 
-    // Create the Supabase query promise
-    const queryPromise = supabase
-      .from("profiles")
-      .select("count(*)", { 
-        count: "exact", 
-        head: true
-      });
+    if (tableError) throw tableError;
 
-    // Race the promises with proper type handling
-    const result = await Promise.race<typeof queryPromise | typeof timeoutPromise>([
-      queryPromise,
-      timeoutPromise
-    ]);
-
-    // Handle the result
-    if ('error' in result) {
-      const { error } = result;
-      console.error("Supabase connection failed:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack,
-        url: supabaseUrl,
-        timestamp: new Date().toISOString(),
-        request: {
-          method: 'GET',
-          path: '/profiles',
-          params: { select: 'count(*)' }
-        }
-      });
-      throw new Error(`Failed to connect to Supabase: ${error.message}`);
+    if (!tableExists) {
+      return {
+        exists: false,
+        schema: 'public',
+        rlsEnabled: false,
+        policies: []
+      };
     }
 
-    console.log("✅ Supabase connection successful");
-    return true;
+    // Check RLS status
+    const { data: rlsStatus, error: rlsError } = await supabase
+      .from('pg_tables')
+      .select('rls_enabled')
+      .eq('schemaname', 'public')
+      .eq('tablename', tableName)
+      .single();
+
+    if (rlsError) throw rlsError;
+
+    // Get RLS policies if enabled
+    let policies = [];
+    if (rlsStatus?.rls_enabled) {
+      const { data: policyData, error: policyError } = await supabase
+        .from('pg_policy')
+        .select('polname, polcmd, polroles')
+        .eq('schemaname', 'public')
+        .eq('tablename', tableName);
+
+      if (policyError) throw policyError;
+      policies = policyData || [];
+    }
+
+    return {
+      exists: true,
+      schema: 'public',
+      rlsEnabled: rlsStatus?.rls_enabled || false,
+      policies
+    };
   } catch (error) {
-    console.error("Critical Supabase connection error:", {
-      error: error.toString(),
-      url: supabaseUrl,
-      timestamp: new Date().toISOString(),
-      stack: error.stack,
-      request: {
-        method: 'GET',
-        path: '/profiles',
-        params: { select: 'count(*)' }
-      }
-    });
-    throw new Error("Failed to establish connection with Supabase");
+    console.error('Error checking table status:', error);
+    throw error;
   }
-};
-
-// Run connection test on initialization
-testConnection().catch((error) => {
-  console.error("Supabase initialization failed:", {
-    error: error.toString(),
-    url: supabaseUrl,
-    timestamp: new Date().toISOString(),
-    stack: error.stack
-  });
-  throw error;
-});
-
-export const supabase = getSupabaseClient();
+}

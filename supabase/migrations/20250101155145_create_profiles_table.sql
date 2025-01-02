@@ -30,5 +30,11 @@ begin
     for update
     to authenticated
     using (auth.uid() = id);
+
+    create policy "Allow read access for testing"
+    on profiles
+    for select
+    to anon, authenticated
+    using (true);
   end if;
 end $$;
