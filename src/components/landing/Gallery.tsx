@@ -12,23 +12,28 @@ interface GalleryProps {
 
 const Gallery = ({ fetchCompanions, activeFilters }: GalleryProps) => {
   const [companions, setCompanions] = useState<Companion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [loadCount, setLoadCount] = useState(0);
   const [ref, inView] = useInView();
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const loadMoreCompanions = useCallback(async () => {
-    if (!hasMore) return;
+  const loadCompanions = useCallback(async (pageNumber: number) => {
+    if (loading || isLoadingMore) return;
     
-    setLoading(true);
+    setIsLoadingMore(true);
     try {
-      const data = await fetchCompanions(page);
+      const data = await fetchCompanions(pageNumber);
       if (data.length > 0) {
-        setCompanions(prev => [...prev, ...data]);
-        setPage(prev => prev + 1);
-        setLoadCount(prev => prev + 1);
+        setCompanions(prev => {
+          // Filter out duplicates
+          const newCompanions = data.filter(newCompanion => 
+            !prev.some(existingCompanion => existingCompanion.id === newCompanion.id)
+          );
+          return [...prev, ...newCompanions];
+        });
+        setPage(pageNumber + 1);
       } else {
         setHasMore(false);
       }
@@ -36,19 +41,22 @@ const Gallery = ({ fetchCompanions, activeFilters }: GalleryProps) => {
       console.error("Error loading companions:", error);
       setError("Failed to load companions");
     } finally {
-      setLoading(false);
+      setIsLoadingMore(false);
     }
-  }, [fetchCompanions, page, hasMore]);
+  }, [fetchCompanions, loading, isLoadingMore]);
 
+  // Initial load
   useEffect(() => {
-    loadMoreCompanions();
+    setLoading(true);
+    loadCompanions(1).finally(() => setLoading(false));
   }, []);
 
+  // Infinite scroll
   useEffect(() => {
-    if (inView && loadCount < 2) {
-      loadMoreCompanions();
+    if (inView && hasMore && !isLoadingMore) {
+      loadCompanions(page);
     }
-  }, [inView, loadCount, loadMoreCompanions]);
+  }, [inView, hasMore, isLoadingMore, page, loadCompanions]);
 
   const filteredCompanions = activeFilters && activeFilters.length > 0
     ? companions.filter(companion => activeFilters.includes(companion.category))
@@ -74,20 +82,11 @@ const Gallery = ({ fetchCompanions, activeFilters }: GalleryProps) => {
         ))}
       </div>
 
-      {loadCount >= 2 && hasMore && (
-        <div className="flex justify-center">
-          <Button
-            onClick={loadMoreCompanions}
-            className="bg-green-500 hover:bg-green-600"
-          >
-            Show More
-          </Button>
-        </div>
-      )}
-
-      {loadCount < 2 && hasMore && (
+      {hasMore && (
         <div ref={ref} className="h-20">
-          {loading && <div className="text-center text-gray-400">Loading more companions...</div>}
+          {(loading || isLoadingMore) && (
+            <div className="text-center text-gray-400">Loading more companions...</div>
+          )}
         </div>
       )}
     </div>
