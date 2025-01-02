@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../landing/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { getCompanions } from "../../services/companion/companion";
+import { fetchCompanions } from "../../services/companion/companion";
 import Gallery from "../landing/Gallery";
 import CompanionFilterSidebar from "./CompanionFilterSidebar";
 import { Card } from "../ui/card";
@@ -18,25 +18,25 @@ const ExplorePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCompanions = async () => {
+    const fetchCompanionsData = async () => {
       setLoading(true);
       try {
-        const data = await getCompanions(activeTab);
+        const data = await fetchCompanions(activeTab);
         setCompanions(data);
       } finally {
         setLoading(false);
       }
     };
-    fetchCompanions();
+    fetchCompanionsData();
   }, [activeTab]);
 
   const handleFiltersChange = (filters: string[]) => {
     setActiveFilters(filters);
   };
 
-  const filteredCompanions = companions?.filter(companion => {
+  const filteredCompanions = companions.filter(companion => {
     return activeFilters.length === 0 || activeFilters.includes(companion.category);
-  }) || [];
+  });
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
