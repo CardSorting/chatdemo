@@ -60,7 +60,6 @@ export const likeCompanion = async (companionId: string) => {
 
 export const bookmarkCompanion = async (companionId: string) => {
   try {
-    // Get the current user
     const {
       data: { user },
       error: userError
@@ -69,7 +68,6 @@ export const bookmarkCompanion = async (companionId: string) => {
     if (userError) throw userError;
     if (!user) throw new Error('No user found');
 
-    // Try to create the bookmark
     const { data, error } = await supabase
       .from('bookmarks')
       .upsert({
@@ -84,7 +82,6 @@ export const bookmarkCompanion = async (companionId: string) => {
       .single();
 
     if (error) {
-      // If the error is not a duplicate entry error
       if (error.code !== '23505') {
         console.error('Error bookmarking companion:', {
           message: error.message,
@@ -102,6 +99,41 @@ export const bookmarkCompanion = async (companionId: string) => {
       companionId,
       error
     });
+    throw error;
+  }
+};
+
+export const getBookmarkedCompanions = async () => {
+  try {
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user) throw new Error('No user found');
+
+    const { data, error } = await supabase
+      .from('bookmarks')
+      .select('companion_id')
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    const companionIds = data.map(b => b.companion_id);
+
+    if (companionIds.length === 0) return [];
+
+    const { data: companions, error: companionsError } = await supabase
+      .from('companions')
+      .select('*')
+      .in('id', companionIds);
+
+    if (companionsError) throw companionsError;
+
+    return companions;
+  } catch (error) {
+    console.error('Error fetching bookmarked companions:', error);
     throw error;
   }
 };

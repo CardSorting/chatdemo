@@ -14,6 +14,7 @@ import SubmitCompanion from "./components/companion/SubmitCompanion";
 import CompanionsPage from "./components/admin/CompanionsPage";
 import CompanionChat from "./components/companion/CompanionChat";
 import { AuthProvider } from "./components/providers/AuthProvider";
+import BookmarksPage from "./components/companion/BookmarksPage";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/user/:userId" element={<UserProfile />} />
+            <Route path="/companions" element={<BookmarksPage />} />
           </Routes>
         </div>
       </Suspense>
