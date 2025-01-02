@@ -15,8 +15,28 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
     companion.likes_count
   );
 
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleLike();
+  };
+
   return (
-    <Card className="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col h-full">
+    <Card className="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col h-full relative">
+      {/* Like button - positioned at top right */}
+      <button
+        onClick={handleLikeClick}
+        className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        aria-label="Like companion"
+      >
+        <div className={`w-8 h-8 flex items-center justify-center rounded-full border ${
+          isLiked 
+            ? 'bg-red-100 border-red-300' 
+            : 'bg-gray-100 border-gray-300 dark:bg-gray-700 dark:border-gray-600'
+        }`}>
+          <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>❤️</span>
+        </div>
+      </button>
+
       {/* Header section */}
       <div className="flex items-center gap-4 mb-6">
         <Avatar className="w-12 h-12">
@@ -42,32 +62,19 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
         </p>
       </div>
 
-      {/* Stats and action section */}
+      {/* Stats section */}
       <div className="mt-auto flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div 
-            className="flex items-center gap-2 cursor-pointer hover:opacity-80"
-            onClick={handleLike}
-          >
-            <div className={`w-8 h-8 flex items-center justify-center rounded-full border ${
-              isLiked 
-                ? 'bg-red-100 border-red-300' 
-                : 'bg-gray-100 border-gray-300 dark:bg-gray-700 dark:border-gray-600'
-            }`}>
-              <span className={`text-sm ${isLiked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>❤️</span>
-            </div>
+          <div className="flex items-center gap-2">
             <span className={`text-sm ${
               isLiked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'
             }`}>
-              {localLikesCount}
+              {localLikesCount} Likes
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600">
-              <span className="text-sm text-gray-500 dark:text-gray-400">💬</span>
-            </div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              {companion.messages_count}
+              {companion.messages_count} Messages
             </span>
           </div>
         </div>

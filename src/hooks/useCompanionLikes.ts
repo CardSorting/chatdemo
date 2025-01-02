@@ -13,21 +13,44 @@ export const useCompanionLikes = (companionId: string, initialLikesCount: number
 
   const likeMutation = useMutation({
     mutationFn: () => likeCompanion(companionId),
-    onSuccess: () => {
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['companions'] });
+      
+      // Snapshot the previous value
+      const previousCompanions = queryClient.getQueryData(['companions']);
+
+      // Optimistically update the UI
       setLocalLikesCount(prev => prev + 1);
       setIsLiked(true);
+
+      // Return a context object with the snapshotted value
+      return { previousCompanions };
+    },
+    onSuccess: () => {
+      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['companions'] });
       toast({
         title: "Liked!",
         description: "Your like has been recorded.",
       });
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      // Rollback to the previous value
+      if (context?.previousCompanions) {
+        queryClient.setQueryData(['companions'], context.previousCompanions);
+      }
+      setLocalLikesCount(initialLikesCount);
+      setIsLiked(false);
       toast({
         title: "Error",
         description: "Failed to like companion",
         variant: "destructive",
       });
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: ['companions'] });
     }
   });
 

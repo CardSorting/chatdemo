@@ -34,13 +34,26 @@ export const getCompanionStats = async (companionId: string) => {
 };
 
 export const likeCompanion = async (companionId: string) => {
-  const { data, error } = await supabase
-    .rpc('increment_likes', { companion_id: companionId });
+  try {
+    const { data, error } = await supabase
+      .rpc('increment_likes', { companion_id: companionId });
 
-  if (error) {
-    console.error('Error liking companion:', error);
+    if (error) {
+      console.error('Error liking companion:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Detailed error in likeCompanion:', {
+      companionId,
+      error
+    });
     throw error;
   }
-
-  return data;
 };
