@@ -15,6 +15,7 @@ import SearchBar from "./SearchBar";
 import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
 import type { Companion } from "@lib/companions";
+import Footer from "../landing/Footer";
 
 type SortOption = "recent" | "name";
 
@@ -210,6 +211,7 @@ const BookmarksPage = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
