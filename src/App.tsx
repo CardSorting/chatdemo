@@ -41,7 +41,11 @@ function App() {
               <Route path="/bookmarks" element={<BookmarksPage />} />
               <Route path="/companions/:companionId" element={<CompanionsPage />} />
               <Route path="/companions/:companionId/tip" element={<TippingPage />} />
-              <Route path="/subscription" element={<SubscriptionPage />} />
+              <Route path="/subscription" element={
+                <Suspense fallback={<p>Loading payment options...</p>}>
+                  <SubscriptionPage />
+                </Suspense>
+              } />
             </Routes>
           </div>
         </Suspense>
