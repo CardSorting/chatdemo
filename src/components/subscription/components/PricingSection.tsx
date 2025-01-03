@@ -20,6 +20,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({
   const [progress, setProgress] = useState(0);
   const paypalButtonContainer = useRef<HTMLDivElement>(null);
   const paypalButtonInstance = useRef<any>(null);
+  const isMounted = useRef(true);
 
   const handlePaymentSuccess = useCallback((amount: number) => {
     console.log('[PricingSection] Handling payment success with amount:', amount);
@@ -52,15 +53,18 @@ const PricingSection: React.FC<PricingSectionProps> = ({
     }
   }, [showSuccess]);
 
+  // Initialize PayPal button when selected tier changes
   useEffect(() => {
-    if (paypalButtonContainer.current) {
-      console.log('Initializing PayPal button with container:', paypalButtonContainer.current);
-      
-      // Store the PayPal button instance
-      paypalButtonInstance.current = initializePayPalButton(paypalButtonContainer.current);
-    }
+    if (!paypalButtonContainer.current || selectedTier === null) return;
+
+    console.log('Initializing PayPal button with container:', paypalButtonContainer.current);
+    
+    // Store the PayPal button instance
+    paypalButtonInstance.current = initializePayPalButton(paypalButtonContainer.current);
 
     return () => {
+      if (!isMounted.current) return;
+
       console.log('Cleaning up PayPal button');
       
       // First, close the PayPal button instance if it exists
@@ -68,6 +72,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({
         try {
           console.log('Closing PayPal button instance');
           paypalButtonInstance.current.close();
+          paypalButtonInstance.current = null;
         } catch (error) {
           console.error('Error closing PayPal button instance:', error);
         }
@@ -84,7 +89,14 @@ const PricingSection: React.FC<PricingSectionProps> = ({
         });
       }
     };
-  }, [initializePayPalButton]);
+  }, [selectedTier, initializePayPalButton]);
+
+  // Component unmount cleanup
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const handleTierSelect = (index: number) => {
     console.log('[PricingSection] Tier selected:', index);
