@@ -1,13 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useContext } from 'react';
 import { usePulse } from '../../../hooks/usePulse';
 import { useAuth } from '../../../hooks/useAuth';
-
-// Declare paypal object on window
-declare global {
-  interface Window {
-    paypal?: any;
-  }
-}
+import { PayPalContext } from '../../providers/PayPalProvider';
 
 interface UsePaypalIntegrationProps {
   onPaymentSuccess: (pulseAmount: number) => void;
@@ -24,85 +18,37 @@ const usePaypalIntegration = ({
   onPaymentSuccess,
   onPaymentError,
 }: UsePaypalIntegrationProps) => {
-  const [paypalSdkLoaded, setPaypalSdkLoaded] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState('10.00');
   const { user } = useAuth();
   const { addPulse } = usePulse(user?.id || '');
-
-  // Keep a ref to store the PayPal button instance (so we can destroy/clean it up if needed)
+  const { isLoaded } = useContext(PayPalContext);
   const paypalButtonRef = useRef<any>(null);
 
-  // 1) Load the PayPal SDK once, if not already present
-  useEffect(() => {
-    // If the PayPal SDK is already on window, assume it’s loaded.
-    if (window.paypal) {
-      setPaypalSdkLoaded(true);
-      return;
-    }
-
-    // Otherwise, load the script once
-    console.log('Loading PayPal SDK...');
-    const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${import.meta.env.VITE_PAYPAL_CLIENT_ID}`;
-    script.async = true;
-    script.onload = () => {
-      console.log('PayPal SDK loaded successfully');
-      setPaypalSdkLoaded(true);
-    };
-    script.onerror = () => {
-      console.error('Failed to load PayPal SDK');
-      setPaypalSdkLoaded(false);
-    };
-    document.body.appendChild(script);
-
-    //  NO removal of the script on unmount - let it stay in the DOM
-    // return () => {
-    //   document.body.removeChild(script);
-    // };
-  }, []);
-
-  // 2) Initialize the PayPal button when conditions are met
   const initializePayPalButton = useCallback(
     (container: HTMLDivElement | null) => {
-      console.log('Attempting to initialize PayPal button...');
-      console.log('PayPal SDK loaded:', paypalSdkLoaded);
-      console.log('Container:', container);
-      console.log('User ID:', user?.id);
-
-      if (!paypalSdkLoaded || !container || !user?.id) {
+      if (!container || !user?.id || !isLoaded) {
         console.log('Initialization conditions not met');
         return;
       }
 
-      // Check if window.paypal is defined before proceeding
-      if (!window.paypal) {
-        console.log('window.paypal is not defined yet');
-        return;
-      }
-
-      // If there’s already a PayPal button rendered, optionally destroy it
+      // If there's already a PayPal button rendered, destroy it
       if (paypalButtonRef.current) {
         try {
-          // Some versions of PayPal JS Buttons support .close() or .remove() / .destroy().
-          // This is optional, but helps avoid double-init or memory leaks.
           paypalButtonRef.current.close?.();
         } catch (e) {
           console.warn('Unable to close existing PayPal button instance', e);
         }
-        // Clear the ref
         paypalButtonRef.current = null;
       }
 
-      console.log('All conditions met, initializing PayPal button');
-
-      // Clear existing HTML in case it was previously rendered
+      // Clear existing HTML
       if (container.firstChild) {
         while (container.firstChild) {
           container.removeChild(container.firstChild);
         }
       }
 
-      // Render a new PayPal button instance
+      // Render new PayPal button instance
       const buttonInstance = window.paypal
         .Buttons({
           style: {
@@ -127,7 +73,6 @@ const usePaypalIntegration = ({
               console.log('Payment captured:', details);
 
               try {
-                // Add Pulse credits based on payment amount
                 const pulseAmount = parseFloat(selectedAmount) * 100;
                 console.log('Attempting to add pulse:', pulseAmount, 'to user:', user.id);
 
@@ -153,26 +98,16 @@ const usePaypalIntegration = ({
         })
         .render(container);
 
-      // Store the PayPal button instance in a ref for potential later cleanup
       paypalButtonRef.current = buttonInstance;
     },
-    [
-      paypalSdkLoaded,
-      selectedAmount,
-      user,
-      addPulse,
-      onPaymentSuccess,
-      onPaymentError,
-    ]
+    [selectedAmount, user, addPulse, onPaymentSuccess, onPaymentError, isLoaded]
   );
 
-  // 3) Update the selected amount
   const updateSelectedAmount = (amount: string) => {
     console.log('Updating selected amount to:', amount);
     setSelectedAmount(amount);
   };
 
-  // 4) Optional cleanup: if you want to destroy the button when unmounting
   useEffect(() => {
     return () => {
       if (paypalButtonRef.current) {
