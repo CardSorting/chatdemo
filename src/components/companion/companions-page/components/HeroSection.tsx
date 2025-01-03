@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "../../../../components/ui/avatar";
 import { Card } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
-import { Star, MessageSquare, Bookmark, Heart, Share2, Users, MessageCircle, Download, PlayCircle, ChevronRight, Info, Clock, Calendar, Tag } from "lucide-react";
+import { Star, MessageSquare, Bookmark, Heart, Share2, Users, MessageCircle, Download, PlayCircle, ChevronRight, Info, Clock, Calendar, Tag, Flag } from "lucide-react";
 import { cn } from "../../../../lib/utils";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../../../../components/ui/carousel";
 import { Progress } from "../../../../components/ui/progress";
@@ -17,6 +17,7 @@ interface HeroSectionProps {
     likes_count: number;
     screenshots?: string[];
     tagline?: string;
+    description?: string;
     version?: string;
     rating?: string;
     last_updated?: string;
@@ -54,7 +55,7 @@ export function HeroSection({ companion }: HeroSectionProps) {
                     <AvatarFallback>{companion.name[0]}</AvatarFallback>
                   </Avatar>
                   {companion.rating && (
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 px-3 py-1 rounded-full text-xs font-medium shadow-sm flex items-center gap-1">
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                       <Tag className="w-3 h-3" />
                       <span>{companion.rating}</span>
                     </div>
@@ -68,17 +69,16 @@ export function HeroSection({ companion }: HeroSectionProps) {
                         {companion.tagline}
                       </p>
                     )}
+                    {companion.description && (
+                      <p className="text-base text-gray-500 dark:text-gray-400 leading-relaxed">
+                        {companion.description}
+                      </p>
+                    )}
                     <p className="text-lg text-gray-500 dark:text-gray-400">
                       by {companion.creator_name}
                     </p>
                   </div>
                   <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-gray-400" />
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        50K+ users
-                      </span>
-                    </div>
                     <div className="flex items-center gap-2">
                       <MessageCircle className="w-5 h-5 text-gray-400" />
                       <span className="text-sm text-gray-600 dark:text-gray-300">
@@ -89,36 +89,21 @@ export function HeroSection({ companion }: HeroSectionProps) {
                 </div>
               </div>
 
-              {/* Ratings and Stats */}
-              <Card className="p-6 bg-white dark:bg-gray-900 shadow-sm">
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold mb-1">4.9</div>
-                    <div className="flex justify-center mb-1">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <Star
-                          key={i}
-                          className="w-4 h-4 text-yellow-400"
-                          fill="currentColor"
-                        />
-                      ))}
-                    </div>
-                    <p className="text-sm text-gray-500">Rating</p>
-                  </div>
-                  <div className="text-center border-l border-r border-gray-200 dark:border-gray-800">
-                    <div className="text-3xl font-bold mb-1">#1</div>
-                    <p className="text-sm text-gray-500 mb-1">Rank</p>
-                    <p className="text-xs text-gray-400">in AI Companions</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold mb-1">
-                      {companion.likes_count || 0}
-                    </div>
-                    <Heart className="w-4 h-4 mx-auto mb-1 text-red-500" />
-                    <p className="text-sm text-gray-500">Likes</p>
-                  </div>
-                </div>
-              </Card>
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <Button variant="outline" className="flex-1 gap-2">
+                  <Share2 className="w-5 h-5" />
+                  Share
+                </Button>
+                <Button variant="outline" className="flex-1 gap-2">
+                  <Bookmark className="w-5 h-5" />
+                  Save
+                </Button>
+                <Button variant="outline" className="flex-1 gap-2">
+                  <Flag className="w-5 h-5" />
+                  Report
+                </Button>
+              </div>
 
               {/* What's New Section */}
               {companion.version && (
@@ -156,22 +141,6 @@ export function HeroSection({ companion }: HeroSectionProps) {
                   <Share2 className="w-5 h-5" />
                   Share
                 </Button>
-              </div>
-            </div>
-
-            {/* Download Statistics */}
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Download className="w-5 h-5 text-gray-400" />
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  100K+ Downloads
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <PlayCircle className="w-5 h-5 text-gray-400" />
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  1M+ Interactions
-                </span>
               </div>
             </div>
 

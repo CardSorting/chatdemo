@@ -7,7 +7,6 @@ import { cn } from "../../../lib/utils";
 import { HeroSection } from "./components/HeroSection";
 import { ScreenshotsSection } from "./components/ScreenshotsSection";
 import { ReviewsSection } from "./components/ReviewsSection";
-import { SidebarSection } from "./components/SidebarSection";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
 import { Button } from "../../../components/ui/button";
 import { Brain, Clock, Zap, Globe, Share2 } from "lucide-react";
@@ -76,12 +75,6 @@ export default function CompanionsPage() {
     },
   ];
 
-  const similarCompanions = [
-    { name: "Companion A", rating: 4.8 },
-    { name: "Companion B", rating: 4.7 },
-    { name: "Companion C", rating: 4.6 },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Sticky Header */}
@@ -115,12 +108,10 @@ export default function CompanionsPage() {
         <ScreenshotsSection screenshots={companion.screenshots} />
       </div>
 
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-12">
-            <ReviewsSection reviews={reviews} />
-          </div>
-          <SidebarSection companion={companion} similarCompanions={similarCompanions} />
+        <div className="max-w-4xl mx-auto">
+          <ReviewsSection reviews={reviews} />
         </div>
       </div>
     </div>
