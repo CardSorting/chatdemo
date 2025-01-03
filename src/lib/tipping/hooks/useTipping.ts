@@ -22,7 +22,8 @@ export function useTipping(creatorId: string): UseTippingReturn {
     ],
     showSuccess: false,
     isLoading: false,
-    isValidAmount: true
+    isValidAmount: true,
+    totalDonors: 0
   });
 
   useEffect(() => {
@@ -70,13 +71,16 @@ export function useTipping(creatorId: string): UseTippingReturn {
 
   const fetchTopTippers = async () => {
     // Mock top tippers
+    const topTippers = [
+      { username: "user123", totalTips: 500 },
+      { username: "user456", totalTips: 300 },
+      { username: "user789", totalTips: 200 },
+    ];
+    
     setState(prev => ({
       ...prev,
-      topTippers: [
-        { username: "user123", totalTips: 500 },
-        { username: "user456", totalTips: 300 },
-        { username: "user789", totalTips: 200 },
-      ]
+      topTippers,
+      totalDonors: topTippers.length
     }));
   };
 
@@ -106,7 +110,8 @@ export function useTipping(creatorId: string): UseTippingReturn {
           recentTips: [
             { amount, timestamp: "Just now", sender: session.user.email || "Anonymous" },
             ...prev.recentTips.slice(0, 2)
-          ]
+          ],
+          totalDonors: prev.totalDonors + 1
         }));
         setTimeout(() => setState(prev => ({ ...prev, showSuccess: false })), 2000);
         toast({

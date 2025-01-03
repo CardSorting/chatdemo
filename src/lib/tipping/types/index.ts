@@ -37,6 +37,7 @@ export interface TippingState {
   showSuccess: boolean;
   isLoading: boolean;
   isValidAmount: boolean;
+  totalDonors: number;
 }
 
 export interface TippingFormProps {

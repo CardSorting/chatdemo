@@ -3,7 +3,7 @@ import { useTipping } from "@lib/tipping/hooks/useTipping";
 import { TippingStats } from "@lib/tipping/components/TippingStats";
 import { TippingForm } from "@lib/tipping/components/TippingForm";
 import { Button } from "../../components/ui/button";
-import { ArrowLeft, Gift, Trophy, Users, Sparkles, Share2, Heart, Loader2 } from "lucide-react";
+import { ArrowLeft, Gift, Trophy, Users, Sparkles, Share2, Heart, Loader2, CreditCard, Shield, Smile, MessageCircle, Image, BookOpen, Check, Star, Clock, TrendingUp, HelpCircle, Video, PieChart, Calendar, BadgeCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Progress } from "../../components/ui/progress";
@@ -13,6 +13,8 @@ import { Skeleton } from "../../components/ui/skeleton";
 import { useState } from "react";
 import { toast } from "../../components/ui/use-toast";
 import { UseTippingReturn } from "@lib/tipping/types";
+import { motion } from "framer-motion";
+import { cn } from "../../lib/utils";
 
 export default function TippingPage() {
   const { creatorId, creatorName } = useParams();
@@ -48,24 +50,23 @@ export default function TippingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header Section */}
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* Sticky Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors"
+            className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors"
+            className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={handleShare}
             disabled={isSharing}
           >
@@ -77,106 +78,260 @@ export default function TippingPage() {
             Share
           </Button>
         </div>
+      </div>
 
+      <div className="container mx-auto px-4 pt-20 pb-8">
         {/* Hero Section */}
-        <div className="max-w-3xl mx-auto mb-12 text-center">
-          <div className="flex justify-center mb-4">
-            <Avatar className="w-24 h-24 border-4 border-gray-800">
-              <AvatarImage src={state.creator?.avatar} />
-              <AvatarFallback>
-                {creatorName?.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+        <div className="relative bg-gradient-to-r from-purple-600 to-blue-500 rounded-xl overflow-hidden mb-12">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+          <div className="relative z-10 p-8 text-center">
+            <div className="max-w-3xl mx-auto">
+              <div className="flex justify-center mb-4">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Avatar className="w-32 h-32 border-4 border-white/20">
+                    <AvatarImage src={state.creator?.avatar} />
+                    <AvatarFallback>
+                      {creatorName?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </motion.div>
+              </div>
+              <h1 className="text-4xl font-bold text-white mb-4">
+                Support {creatorName}
+              </h1>
+              <p className="text-white/90 text-lg max-w-prose mx-auto mb-6">
+                Help {creatorName} continue creating amazing content and reach new milestones
+              </p>
+              <div className="flex justify-center gap-4">
+                <Button
+                  variant="default"
+                  size="lg"
+                  className="bg-white text-gray-900 hover:bg-gray-100"
+                  onClick={() => setTipAmount(10)}
+                >
+                  <Heart className="w-5 h-5 mr-2" />
+                  Donate $10
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="text-white border-white/30 hover:bg-white/10"
+                  onClick={() => setTipAmount(25)}
+                >
+                  <Gift className="w-5 h-5 mr-2" />
+                  Donate $25
+                </Button>
+              </div>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Support {creatorName}
-          </h1>
-          <p className="text-gray-400 max-w-prose mx-auto">
-            Your support helps {creatorName} continue creating amazing content. Every tip makes a difference!
-          </p>
         </div>
 
-        <div className="max-w-3xl mx-auto space-y-8">
-          {/* Current Goal Section */}
-          {nextMilestone && (
-            <Card className="p-6 bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors">
-              <div className="flex items-center gap-3 mb-4">
-                <Trophy className="w-5 h-5 text-yellow-500" />
-                <h2 className="text-lg font-semibold text-white">Current Goal</h2>
-              </div>
-              <p className="text-gray-300 mb-4">{nextMilestone.description}</p>
-              <Progress 
-                value={(nextMilestone.current / nextMilestone.goal) * 100} 
-                className="h-2 mb-2 bg-gray-700"
-              />
-              <div className="flex justify-between text-sm text-gray-400">
-                <span>${nextMilestone.current} raised</span>
-                <span>Goal: ${nextMilestone.goal}</span>
-              </div>
-            </Card>
-          )}
-
-          {/* Tipping Form Section */}
-          <Card className="p-6 bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors">
-            <div className="flex items-center gap-3 mb-6">
-              <Gift className="w-5 h-5 text-purple-500" />
-              <h2 className="text-lg font-semibold text-white">Send a Tip</h2>
-            </div>
-            <TippingForm
-              state={state}
-              onTip={handleTip}
-              onCustomTip={() => handleTip(parseFloat(state.customAmount))}
-              onCustomAmountChange={handleCustomAmountChange}
-              setTipAmount={setTipAmount}
-              isLoading={isLoading}
-            />
-          </Card>
-
-          {/* Community Support Section */}
-          <Card className="p-6 bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors">
-            <div className="flex items-center gap-3 mb-6">
-              <Users className="w-5 h-5 text-blue-500" />
-              <h2 className="text-lg font-semibold text-white">Community Support</h2>
-            </div>
-            
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-12">
+            {/* Story Section */}
             <div className="space-y-6">
-              {/* Recent Activity */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-400 mb-3">Recent Activity</h3>
-                <div className="space-y-3">
-                  {state.recentTips?.slice(0, 3).map((tip, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm hover:bg-gray-700/50 p-2 rounded-lg transition-colors">
-                      <span className="text-gray-300">{tip.sender}</span>
-                      <span className="text-green-400 font-medium">${tip.amount}</span>
-                    </div>
-                  ))}
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <BookOpen className="w-6 h-6 text-purple-500" />
+                The Story
+              </h2>
+              <Card className="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                <div className="prose prose-invert max-w-none">
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {creatorName} has been creating amazing content that inspires and entertains thousands of people. 
+                    Your support will help them continue their journey and reach new heights in their creative endeavors.
+                  </p>
+                  <p className="text-gray-700 dark:text-gray-300 mt-4">
+                    With your contributions, {creatorName} will be able to:
+                  </p>
+                  <ul className="text-gray-700 dark:text-gray-300">
+                    <li>Invest in better equipment and tools</li>
+                    <li>Create more high-quality content</li>
+                    <li>Expand their reach to new audiences</li>
+                    <li>Develop innovative projects</li>
+                  </ul>
                 </div>
-              </div>
-
-              <Separator className="bg-gray-700" />
-
-              {/* Top Supporters */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-400 mb-3">Top Supporters</h3>
-                <div className="space-y-3">
-                  {state.topTippers?.slice(0, 3).map((tipper, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm hover:bg-gray-700/50 p-2 rounded-lg transition-colors">
-                      <div className="flex items-center gap-2">
-                        {index === 0 && <Sparkles className="w-4 h-4 text-yellow-500" />}
-                        <span className="text-gray-300">{tipper.username}</span>
-                      </div>
-                      <span className="text-purple-400 font-medium">${tipper.totalTips}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              </Card>
             </div>
-          </Card>
 
-          {/* Stats Section */}
-          <Card className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors">
-            <TippingStats state={state} creatorName={creatorName || ""} />
-          </Card>
+            {/* How Funds Will Be Used Section */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <PieChart className="w-6 h-6 text-blue-500" />
+                How Funds Will Be Used
+              </h2>
+              <Card className="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-start gap-4">
+                    <PieChart className="w-6 h-6 text-purple-500 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Content Creation</h3>
+                      <p className="text-gray-600 dark:text-gray-400">50% of funds will go towards creating new content</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <TrendingUp className="w-6 h-6 text-blue-500 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Growth & Marketing</h3>
+                      <p className="text-gray-600 dark:text-gray-400">30% will be used to reach new audiences</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <Video className="w-6 h-6 text-green-500 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Equipment</h3>
+                      <p className="text-gray-600 dark:text-gray-400">15% will be invested in better equipment</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <Shield className="w-6 h-6 text-yellow-500 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Platform Fees</h3>
+                      <p className="text-gray-600 dark:text-gray-400">5% covers platform and payment processing fees</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Updates Section */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Calendar className="w-6 h-6 text-purple-500" />
+                Updates
+              </h2>
+              <Card className="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <Calendar className="w-6 h-6 text-purple-500 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">New Content Coming Soon!</h3>
+                      <p className="text-gray-600 dark:text-gray-400">We're working on exciting new projects thanks to your support</p>
+                      <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Posted 3 days ago</p>
+                    </div>
+                  </div>
+                  <Separator className="bg-gray-200 dark:bg-gray-800" />
+                  <div className="flex items-start gap-4">
+                    <BadgeCheck className="w-6 h-6 text-blue-500 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">First Milestone Reached!</h3>
+                      <p className="text-gray-600 dark:text-gray-400">We've hit our first funding goal - thank you everyone!</p>
+                      <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Posted 1 week ago</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-12">
+            {/* Progress Section */}
+            {nextMilestone && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <TrendingUp className="w-6 h-6 text-purple-500" />
+                  Campaign Progress
+                </h2>
+                <Card className="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-gray-700 dark:text-gray-300">
+                      <span>${nextMilestone.current} raised</span>
+                      <span>Goal: ${nextMilestone.goal}</span>
+                    </div>
+                    <Progress 
+                      value={(nextMilestone.current / nextMilestone.goal) * 100} 
+                      className="h-3 bg-gray-200 dark:bg-gray-800"
+                    />
+                    <div className="flex justify-between text-gray-500 dark:text-gray-400 text-sm">
+                      <span>{Math.round((nextMilestone.current / nextMilestone.goal) * 100)}% of goal reached</span>
+                      <span>{state.totalDonors} supporters</span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            )}
+
+            {/* Community Support Section */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Users className="w-6 h-6 text-blue-500" />
+                Community Support
+              </h2>
+              <Card className="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                <div className="space-y-6">
+                  {/* Recent Activity */}
+                  <div>
+                    <h3 className="text-base font-medium text-gray-600 dark:text-gray-400 mb-3">Recent Activity</h3>
+                    <div className="space-y-3">
+                      {state.recentTips?.slice(0, 3).map((tip, index) => (
+                        <div key={index} className="flex items-center justify-between text-base hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors">
+                          <span className="text-gray-700 dark:text-gray-300">{tip.sender}</span>
+                          <span className="text-green-500 font-medium">${tip.amount}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Separator className="bg-gray-200 dark:bg-gray-800" />
+
+                  {/* Top Supporters */}
+                  <div>
+                    <h3 className="text-base font-medium text-gray-600 dark:text-gray-400 mb-3">Top Supporters</h3>
+                    <div className="space-y-3">
+                      {state.topTippers?.slice(0, 3).map((tipper, index) => (
+                        <div key={index} className="flex items-center justify-between text-base hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors">
+                          <div className="flex items-center gap-2">
+                            {index === 0 && <Sparkles className="w-5 h-5 text-yellow-500" />}
+                            <span className="text-gray-700 dark:text-gray-300">{tipper.username}</span>
+                          </div>
+                          <span className="text-purple-500 font-medium">${tipper.totalTips}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* FAQ Section */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <HelpCircle className="w-6 h-6 text-purple-500" />
+                Frequently Asked Questions
+              </h2>
+              <Card className="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <HelpCircle className="w-6 h-6 text-purple-500 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Is my donation secure?</h3>
+                      <p className="text-gray-600 dark:text-gray-400">Yes, we use industry-standard encryption to protect your information</p>
+                    </div>
+                  </div>
+                  <Separator className="bg-gray-200 dark:bg-gray-800" />
+                  <div className="flex items-start gap-4">
+                    <HelpCircle className="w-6 h-6 text-blue-500 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Can I get a refund?</h3>
+                      <p className="text-gray-600 dark:text-gray-400">Donations are non-refundable as they are immediately put to use</p>
+                    </div>
+                  </div>
+                  <Separator className="bg-gray-200 dark:bg-gray-800" />
+                  <div className="flex items-start gap-4">
+                    <HelpCircle className="w-6 h-6 text-green-500 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">How often can I donate?</h3>
+                      <p className="text-gray-600 dark:text-gray-400">You can donate as often as you like - every contribution helps!</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
