@@ -10,13 +10,11 @@ declare global {
 }
 
 interface UsePaypalIntegrationProps {
-  containerRef: React.RefObject<HTMLDivElement>;
   onPaymentSuccess: (pulseAmount: number) => void;
   onPaymentError: () => void;
 }
 
 const usePaypalIntegration = ({ 
-  containerRef,
   onPaymentSuccess,
   onPaymentError
 }: UsePaypalIntegrationProps) => {
@@ -27,10 +25,18 @@ const usePaypalIntegration = ({
 
   // Load PayPal SDK
   useEffect(() => {
+    console.log('Loading PayPal SDK...');
     const script = document.createElement('script');
     script.src = `https://www.paypal.com/sdk/js?client-id=${import.meta.env.VITE_PAYPAL_CLIENT_ID}`;
     script.async = true;
-    script.onload = () => setPaypalSdkLoaded(true);
+    script.onload = () => {
+      console.log('PayPal SDK loaded successfully');
+      setPaypalSdkLoaded(true);
+    };
+    script.onerror = () => {
+      console.error('Failed to load PayPal SDK');
+      setPaypalSdkLoaded(false);
+    };
     document.body.appendChild(script);
 
     return () => {
@@ -38,15 +44,21 @@ const usePaypalIntegration = ({
     };
   }, []);
 
-  // Initialize or update PayPal button
-  const initializePayPalButton = useCallback(() => {
-    if (!paypalSdkLoaded || !containerRef.current || !user?.id) {
-      console.log('PayPal initialization conditions not met');
+  const initializePayPalButton = useCallback((container: HTMLDivElement | null) => {
+    console.log('Attempting to initialize PayPal button...');
+    console.log('PayPal SDK loaded:', paypalSdkLoaded);
+    console.log('Container:', container);
+    console.log('User ID:', user?.id);
+
+    if (!paypalSdkLoaded || !container || !user?.id) {
+      console.log('Initialization conditions not met');
       return;
     }
 
+    console.log('All conditions met, initializing PayPal button');
+    
     // Clear existing buttons
-    containerRef.current.innerHTML = '';
+    container.innerHTML = '';
 
     window.paypal
       .Buttons({
@@ -94,16 +106,8 @@ const usePaypalIntegration = ({
           onPaymentError();
         }
       })
-      .render(containerRef.current);
-  }, [paypalSdkLoaded, containerRef, selectedAmount, addPulse, user, onPaymentSuccess, onPaymentError]);
-
-  // Reinitialize button when amount changes
-  useEffect(() => {
-    if (paypalSdkLoaded && user?.id) {
-      console.log('Reinitializing PayPal button');
-      initializePayPalButton();
-    }
-  }, [paypalSdkLoaded, selectedAmount, initializePayPalButton, user]);
+      .render(container);
+  }, [paypalSdkLoaded, selectedAmount, addPulse, user, onPaymentSuccess, onPaymentError]);
 
   const updateSelectedAmount = (amount: string) => {
     console.log('Updating selected amount to:', amount);

@@ -1,18 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '../../ui/card';
 import { motion } from 'framer-motion';
 import { purchaseTiers } from '../utils/data';
-import { PayPalButtonContainerRef } from '../types/subscription';
 import Confetti from 'react-confetti';
+import usePaypalIntegration from '../utils/usePaypalIntegration';
 
 interface PricingSectionProps {
-  paypalButtonContainer: PayPalButtonContainerRef;
   updateSelectedAmount: (amount: string) => void;
   onPaymentSuccess: (pulseAmount: number) => void;
 }
 
 const PricingSection: React.FC<PricingSectionProps> = ({ 
-  paypalButtonContainer,
   updateSelectedAmount,
   onPaymentSuccess
 }) => {
@@ -20,11 +18,23 @@ const PricingSection: React.FC<PricingSectionProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [pulseAmount, setPulseAmount] = useState(0);
   const [progress, setProgress] = useState(0);
+  const paypalButtonContainer = useRef<HTMLDivElement>(null);
+
+  const handlePaymentSuccess = useCallback((amount: number) => {
+    console.log('[PricingSection] Handling payment success with amount:', amount);
+    setPulseAmount(amount);
+    setShowSuccess(true);
+    onPaymentSuccess(amount);
+  }, [onPaymentSuccess]);
+
+  const { initializePayPalButton } = usePaypalIntegration({
+    onPaymentSuccess: handlePaymentSuccess,
+    onPaymentError: () => console.error('Payment error occurred')
+  });
 
   useEffect(() => {
     console.log('[PricingSection] showSuccess changed:', showSuccess);
     if (showSuccess) {
-      // Animate progress bar
       const interval = setInterval(() => {
         setProgress((prev) => Math.min(prev + 1, 100));
       }, 20);
@@ -41,12 +51,19 @@ const PricingSection: React.FC<PricingSectionProps> = ({
     }
   }, [showSuccess]);
 
-  const handlePaymentSuccess = (amount: number) => {
-    console.log('[PricingSection] Handling payment success with amount:', amount);
-    setPulseAmount(amount);
-    setShowSuccess(true);
-    onPaymentSuccess(amount);
-  };
+  useEffect(() => {
+    if (paypalButtonContainer.current) {
+      console.log('Initializing PayPal button with container:', paypalButtonContainer.current);
+      initializePayPalButton(paypalButtonContainer.current);
+    }
+
+    return () => {
+      if (paypalButtonContainer.current) {
+        console.log('Cleaning up PayPal button container');
+        paypalButtonContainer.current.innerHTML = '';
+      }
+    };
+  }, [initializePayPalButton]);
 
   const handleTierSelect = (index: number) => {
     console.log('[PricingSection] Tier selected:', index);

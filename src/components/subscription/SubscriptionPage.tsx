@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Button } from '../ui/button';
 import HeroSection from '../subscription/components/HeroSection';
 import PricingSection from '../subscription/components/PricingSection';
@@ -7,8 +7,6 @@ import TestimonialsSection from '../subscription/components/TestimonialsSection'
 import usePaypalIntegration from './utils/usePaypalIntegration';
 
 const SubscriptionPage = () => {
-  const paypalButtonContainer = useRef(null);
-
   const handlePaymentSuccess = (pulseAmount: number) => {
     console.log('[SubscriptionPage] Payment success handler called with amount:', pulseAmount);
   };
@@ -18,7 +16,6 @@ const SubscriptionPage = () => {
   };
 
   const { updateSelectedAmount } = usePaypalIntegration({
-    containerRef: paypalButtonContainer,
     onPaymentSuccess: handlePaymentSuccess,
     onPaymentError: handlePaymentError
   });
@@ -46,7 +43,6 @@ const SubscriptionPage = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <PricingSection 
-          paypalButtonContainer={paypalButtonContainer}
           updateSelectedAmount={updateSelectedAmount}
           onPaymentSuccess={handlePaymentSuccess}
         />
