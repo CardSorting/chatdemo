@@ -10,6 +10,53 @@ const useSubscription = () => {
   const [pulseAward, setPulseAward] = useState(0);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
 
+  const getPulseAward = (tier: string) => {
+    switch (tier) {
+      case 'basic':
+        return 1000;
+      case 'premium':
+        return 2500;
+      case 'elite':
+        return 5000;
+      default:
+        return 0;
+    }
+  };
+
+  const getTierPrice = (tier: string) => {
+    switch (tier) {
+      case 'basic':
+        return '5.00';
+      case 'premium':
+        return '15.00';
+      case 'elite':
+        return '25.00';
+      default:
+        return '0.00';
+    }
+  };
+
+  const awardPulse = async (amount: number) => {
+    if (!session?.user?.id) {
+      console.error("User not logged in");
+      return;
+    }
+    try {
+      await updatePulseBalance(session.user.id, amount);
+      setLastAwardDate(new Date());
+      if (subscriptionId) {
+        await supabase
+          .from('subscriptions')
+          .update({ last_award_date: new Date().toISOString() })
+          .eq('id', subscriptionId);
+      }
+      alert(`Successfully awarded ${amount} pulse!`);
+    } catch (error) {
+      console.error("Error awarding pulse:", error);
+      alert("Error awarding pulse. Please try again later.");
+    }
+  };
+
   useEffect(() => {
     const fetchSubscription = async () => {
       if (!session?.user?.id) return;
@@ -39,30 +86,59 @@ const useSubscription = () => {
     fetchSubscription();
   }, [session]);
 
-  const getPulseAward = (tier: string) => {
-    switch (tier) {
-      case 'basic':
-        return 1000;
-      case 'premium':
-        return 2500;
-      case 'elite':
-        return 5000;
-      default:
-        return 0;
-    }
-  };
-
   const subscribe = async (tier: string) => {
     if (!session?.user?.id) {
       console.error("User not logged in");
       return;
     }
+
     try {
+      // Initialize PayPal payment
+      const paypalResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${btoa(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`)}`
+        },
+        body: 'grant_type=client_credentials'
+      });
+
+      const { access_token } = await paypalResponse.json();
+
+      // Create PayPal order
+      const orderResponse = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${access_token}`,
+          'PayPal-Request-Id': process.env.PAYPAL_APP_NAME
+        },
+        body: JSON.stringify({
+          intent: 'CAPTURE',
+          purchase_units: [{
+            amount: {
+              currency_code: 'USD',
+              value: getTierPrice(tier)
+            }
+          }]
+        })
+      });
+
+      const order = await orderResponse.json();
+      
+      // Redirect to PayPal approval URL
+      if (order.links && order.links[1] && order.links[1].href) {
+        window.location.href = order.links[1].href;
+      }
+
+      // If payment is successful, create subscription
       const { data, error } = await supabase
         .from('subscriptions')
         .insert({
           user_id: session.user.id,
           tier,
+          paypal_order_id: order.id,
+          created_at: new Date().toISOString()
         })
         .select()
         .single();
@@ -103,27 +179,6 @@ const useSubscription = () => {
       setSubscriptionId(null);
     } catch (error) {
       console.error("Error deleting subscription:", error);
-    }
-  };
-
-  const awardPulse = async (amount: number) => {
-    if (!session?.user?.id) {
-      console.error("User not logged in");
-      return;
-    }
-    try {
-      await updatePulseBalance(session.user.id, amount);
-      setLastAwardDate(new Date());
-      if (subscriptionId) {
-        await supabase
-          .from('subscriptions')
-          .update({ last_award_date: new Date().toISOString() })
-          .eq('id', subscriptionId);
-      }
-      alert(`Successfully awarded ${amount} pulse!`);
-    } catch (error) {
-      console.error("Error awarding pulse:", error);
-      alert("Error awarding pulse. Please try again later.");
     }
   };
 
