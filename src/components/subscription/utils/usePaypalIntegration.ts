@@ -9,7 +9,19 @@ declare global {
   }
 }
 
-const usePaypalIntegration = (containerRef: React.RefObject<HTMLDivElement>) => {
+interface UsePaypalIntegrationProps {
+  containerRef: React.RefObject<HTMLDivElement>;
+  onPaymentSuccess: (pulseAmount: number) => void;
+  onPaymentError: (errorType?: string) => void;
+  onPaymentProcessing: (isProcessing: boolean) => void;
+}
+
+const usePaypalIntegration = ({ 
+  containerRef,
+  onPaymentSuccess,
+  onPaymentError,
+  onPaymentProcessing
+}: UsePaypalIntegrationProps) => {
   const [paypalSdkLoaded, setPaypalSdkLoaded] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState('10.00');
   const { user } = useAuth();
@@ -42,6 +54,7 @@ const usePaypalIntegration = (containerRef: React.RefObject<HTMLDivElement>) => 
           layout: "vertical",
         },
         createOrder(data: any, actions: any) {
+          onPaymentProcessing(true);
           return actions.order.create({
             purchase_units: [{
               amount: {
@@ -62,21 +75,27 @@ const usePaypalIntegration = (containerRef: React.RefObject<HTMLDivElement>) => 
               await addPulse(pulseAmount);
               console.log('Pulse credits added successfully');
               
-              // Show success message to user
-              alert(`Payment successful! ${pulseAmount} Pulse added to your account.`);
+              // Call success handler
+              onPaymentSuccess(pulseAmount);
             } catch (error) {
               console.error('Failed to add Pulse credits:', error);
-              alert('Payment successful but failed to add Pulse credits. Please contact support.');
+              onPaymentError('pulse');
+            } finally {
+              onPaymentProcessing(false);
             }
           });
         },
         onError(err: any) {
           console.error('PayPal error:', err);
-          alert('Payment failed. Please try again.');
+          onPaymentError('network');
+          onPaymentProcessing(false);
+        },
+        onCancel() {
+          onPaymentProcessing(false);
         }
       })
       .render(containerRef.current);
-  }, [paypalSdkLoaded, containerRef, selectedAmount, addPulse, user]);
+  }, [paypalSdkLoaded, containerRef, selectedAmount, addPulse, user, onPaymentSuccess, onPaymentError, onPaymentProcessing]);
 
   // Reinitialize button when amount changes
   useEffect(() => {
