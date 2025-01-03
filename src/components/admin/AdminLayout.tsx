@@ -1,9 +1,9 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@lib/auth";
+import { Button } from "@components/ui/button";
 import { Loader2, LogOut, Settings, Users, Bot } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@lib/utils";
 
 const AdminLayout = () => {
   const { loading, isAdmin, signOut } = useAuth();
