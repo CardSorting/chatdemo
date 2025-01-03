@@ -3,16 +3,20 @@ import { supabase } from './supabase';
 export interface Companion {
   id: string;
   name: string;
-  creator_name: string;
-  creator_id: string;
+  description: string;
   avatar_url: string;
-  description?: string;
-  messages_count: number;
+  creator_id: string;
+  creator_name: string;
   likes_count: number;
-  chat_url: string;
+  messages_count: number;
+  tags: string[];
   created_at: string;
   updated_at: string;
-  is_featured: boolean;
+  chat_url: string;
+  status: string;
+  moderation_feedback?: string;
+  moderated_at?: string;
+  moderated_by?: string;
   screenshots: string[];
 }
 
@@ -28,16 +32,20 @@ export const fetchCompanions = async (): Promise<Companion[]> => {
     return data.map(companion => ({
       id: companion.id,
       name: companion.name,
-      creator_name: companion.creator_name,
-      creator_id: companion.creator_id,
-      avatar_url: companion.avatar_url,
       description: companion.description,
-      messages_count: companion.messages_count,
+      avatar_url: companion.avatar_url,
+      creator_id: companion.creator_id,
+      creator_name: companion.creator_name,
       likes_count: companion.likes_count,
-      chat_url: companion.chat_url,
+      messages_count: companion.messages_count,
+      tags: companion.tags || [],
       created_at: companion.created_at,
       updated_at: companion.updated_at,
-      is_featured: companion.is_featured,
+      chat_url: companion.chat_url,
+      status: companion.status,
+      moderation_feedback: companion.moderation_feedback,
+      moderated_at: companion.moderated_at,
+      moderated_by: companion.moderated_by,
       screenshots: companion.screenshots || []
     }));
   } catch (error) {
@@ -60,16 +68,20 @@ export const getCompanion = async (id: string): Promise<Companion | null> => {
     return {
       id: data.id,
       name: data.name,
-      creator_name: data.creator_name,
-      creator_id: data.creator_id,
-      avatar_url: data.avatar_url,
       description: data.description,
-      messages_count: data.messages_count,
+      avatar_url: data.avatar_url,
+      creator_id: data.creator_id,
+      creator_name: data.creator_name,
       likes_count: data.likes_count,
-      chat_url: data.chat_url,
+      messages_count: data.messages_count,
+      tags: data.tags || [],
       created_at: data.created_at,
       updated_at: data.updated_at,
-      is_featured: data.is_featured,
+      chat_url: data.chat_url,
+      status: data.status,
+      moderation_feedback: data.moderation_feedback,
+      moderated_at: data.moderated_at,
+      moderated_by: data.moderated_by,
       screenshots: data.screenshots || []
     };
   } catch (error) {
