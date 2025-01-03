@@ -78,7 +78,8 @@ CREATE TABLE IF NOT EXISTS public.new_companions (
     creator_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
     creator_name text NOT NULL,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    total_pulse_pledged integer DEFAULT 0 NOT NULL
 );
 
 -- Create categories table for the new schema
@@ -179,3 +180,66 @@ CREATE POLICY "Users can delete their own companion categories"
             WHERE id = companion_id AND creator_id = auth.uid()
         )
     );
+
+-- Create pulse pledges table
+CREATE TABLE IF NOT EXISTS public.new_companion_pulse_pledges (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    companion_id uuid REFERENCES public.new_companions(id) ON DELETE CASCADE,
+    pledger_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+    amount integer NOT NULL CHECK (amount > 0),
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Create indexes for pulse pledges
+CREATE INDEX IF NOT EXISTS idx_companion_pulse_pledges_companion_id 
+    ON public.new_companion_pulse_pledges(companion_id);
+CREATE INDEX IF NOT EXISTS idx_companion_pulse_pledges_pledger_id 
+    ON public.new_companion_pulse_pledges(pledger_id);
+CREATE INDEX IF NOT EXISTS idx_companion_pulse_pledges_created_at 
+    ON public.new_companion_pulse_pledges(created_at);
+
+-- Enable RLS on pulse pledges table
+ALTER TABLE public.new_companion_pulse_pledges ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can view pulse pledges" ON public.new_companion_pulse_pledges;
+DROP POLICY IF EXISTS "Authenticated users can create pulse pledges" ON public.new_companion_pulse_pledges;
+DROP POLICY IF EXISTS "Users can view their own pulse pledges" ON public.new_companion_pulse_pledges;
+
+-- Create policies for pulse pledges
+CREATE POLICY "Anyone can view pulse pledges"
+    ON public.new_companion_pulse_pledges FOR SELECT
+    USING (true);
+
+CREATE POLICY "Authenticated users can create pulse pledges"
+    ON public.new_companion_pulse_pledges FOR INSERT
+    WITH CHECK (
+        auth.role() = 'authenticated' AND
+        auth.uid() = pledger_id
+    );
+
+-- Create function to update companion total_pulse_pledged
+CREATE OR REPLACE FUNCTION public.update_companion_total_pulse_pledged()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE public.new_companions
+        SET total_pulse_pledged = total_pulse_pledged + NEW.amount
+        WHERE id = NEW.companion_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE public.new_companions
+        SET total_pulse_pledged = total_pulse_pledged - OLD.amount
+        WHERE id = OLD.companion_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger for updating total_pulse_pledged
+DROP TRIGGER IF EXISTS update_companion_total_pulse_pledged_trigger 
+    ON public.new_companion_pulse_pledges;
+    
+CREATE TRIGGER update_companion_total_pulse_pledged_trigger
+    AFTER INSERT OR DELETE ON public.new_companion_pulse_pledges
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_companion_total_pulse_pledged();

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../lib/auth";
 import { sendTip, getPulseBalance } from "../../../services/pulse/pulseService";
 import { toast } from "../../../components/ui/use-toast";
-import { TippingState, Tip, Tipper, Milestone, UseTippingReturn } from "../types";
+import type { TippingState, CompanionPulsePledge, Milestone, UseTippingReturn, TopTipper } from "../types/index";
+import { supabase } from "../../../lib/supabase";
 
 export function useTipping(creatorId: string): UseTippingReturn {
   const { session } = useAuth();
@@ -65,30 +66,71 @@ export function useTipping(creatorId: string): UseTippingReturn {
   };
 
   const fetchRecentTips = async () => {
-    // Mock recent tips
-    setState(prev => ({
-      ...prev,
-      recentTips: [
-        { amount: 50, timestamp: "2 minutes ago", sender: "user123" },
-        { amount: 100, timestamp: "5 minutes ago", sender: "user456" },
-        { amount: 20, timestamp: "10 minutes ago", sender: "user789" },
-      ]
-    }));
+    try {
+      const { data: pledges, error } = await supabase
+        .from('new_companion_pulse_pledges')
+        .select(`
+          id,
+          companion_id,
+          pledger_id,
+          amount,
+          created_at,
+          profiles:pledger_id (username)
+        `)
+        .eq('companion_id', creatorId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      setState(prev => ({
+        ...prev,
+        recentTips: pledges?.map(pledge => ({
+          id: pledge.id,
+          companion_id: pledge.companion_id,
+          pledger_id: pledge.pledger_id,
+          amount: pledge.amount,
+          created_at: pledge.created_at,
+          profiles: pledge.profiles?.[0] || { username: 'Anonymous' }
+        })) || []
+      }));
+    } catch (error) {
+      console.error('Error fetching recent tips:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load recent tips",
+        variant: "destructive",
+      });
+    }
   };
 
   const fetchTopTippers = async () => {
-    // Mock top tippers
-    const topTippers = [
-      { username: "user123", totalTips: 500 },
-      { username: "user456", totalTips: 300 },
-      { username: "user789", totalTips: 200 },
-    ];
-    
-    setState(prev => ({
-      ...prev,
-      topTippers,
-      totalDonors: topTippers.length
-    }));
+    try {
+      const { data: topTippers, error } = await supabase
+        .rpc('get_top_tippers', {
+          companion_id_param: creatorId,
+          limit_param: 10
+        });
+
+      if (error) throw error;
+
+      setState(prev => ({
+        ...prev,
+        topTippers: topTippers.map(t => ({
+          pledger_id: t.pledger_id,
+          username: t.username || 'Anonymous',
+          total_pledged: t.total_pledged || 0
+        })),
+        totalDonors: topTippers.length
+      }));
+    } catch (error) {
+      console.error('Error fetching top tippers:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load top tippers",
+        variant: "destructive",
+      });
+    }
   };
 
   const validateAmount = (amount: number): boolean => {
@@ -119,30 +161,41 @@ export function useTipping(creatorId: string): UseTippingReturn {
 
     setState(prev => ({ ...prev, isTipping: true }));
     try {
-      const result = await sendTip(session.user.id, creatorId, amount);
-      if (result.success) {
-        setState(prev => ({
-          ...prev,
-          showSuccess: true,
-          userBalance: prev.userBalance - amount,
-          recentTips: [
-            { amount, timestamp: "Just now", sender: session.user.email || "Anonymous" },
-            ...prev.recentTips.slice(0, 2)
-          ],
-          totalDonors: prev.totalDonors + 1
-        }));
-        setTimeout(() => setState(prev => ({ ...prev, showSuccess: false })), 2000);
-        toast({
-          title: "Tip Sent!",
-          description: `You successfully sent ${amount} Pulse to ${creatorId}`,
-        });
-      } else {
-        toast({
-          title: "Tip Failed",
-          description: result.message,
-          variant: "destructive",
-        });
+      // First deduct the pulse using sendTip
+      const tipResult = await sendTip(session.user.id, creatorId, amount);
+      if (!tipResult.success) {
+        throw new Error(tipResult.message);
       }
+
+      // Then create the pledge record
+      const { error: pledgeError } = await supabase
+        .from('new_companion_pulse_pledges')
+        .insert({
+          companion_id: creatorId,
+          pledger_id: session.user.id,
+          amount: amount
+        });
+
+      if (pledgeError) throw pledgeError;
+
+      // Update state
+      setState(prev => ({
+        ...prev,
+        showSuccess: true,
+        userBalance: prev.userBalance - amount
+      }));
+
+      // Refresh tips data
+      await Promise.all([
+        fetchRecentTips(),
+        fetchTopTippers()
+      ]);
+
+      setTimeout(() => setState(prev => ({ ...prev, showSuccess: false })), 2000);
+      toast({
+        title: "Tip Sent!",
+        description: `You successfully sent ${amount} Pulse to ${creatorId}`,
+      });
     } catch (error) {
       toast({
         title: "Tip Failed",
