@@ -30,7 +30,7 @@ const usePaypalIntegration = (containerRef: React.RefObject<HTMLDivElement>) => 
 
   // Initialize or update PayPal button
   const initializePayPalButton = useCallback(() => {
-    if (!paypalSdkLoaded || !containerRef.current) return;
+    if (!paypalSdkLoaded || !containerRef.current || !user?.id) return;
 
     // Clear existing buttons
     containerRef.current.innerHTML = '';
@@ -54,29 +54,36 @@ const usePaypalIntegration = (containerRef: React.RefObject<HTMLDivElement>) => 
           return actions.order.capture().then(async function(details: any) {
             console.log('Payment approved:', details);
             
-            // Add Pulse credits based on payment amount
-            const pulseAmount = parseFloat(selectedAmount) * 100; // Convert $ to Pulse
             try {
+              // Add Pulse credits based on payment amount
+              const pulseAmount = parseFloat(selectedAmount) * 100; // Convert $ to Pulse
+              console.log('Adding Pulse:', pulseAmount, 'to user:', user.id);
+              
               await addPulse(pulseAmount);
               console.log('Pulse credits added successfully');
+              
+              // Show success message to user
+              alert(`Payment successful! ${pulseAmount} Pulse added to your account.`);
             } catch (error) {
               console.error('Failed to add Pulse credits:', error);
+              alert('Payment successful but failed to add Pulse credits. Please contact support.');
             }
           });
         },
         onError(err: any) {
           console.error('PayPal error:', err);
+          alert('Payment failed. Please try again.');
         }
       })
       .render(containerRef.current);
-  }, [paypalSdkLoaded, containerRef, selectedAmount, addPulse]);
+  }, [paypalSdkLoaded, containerRef, selectedAmount, addPulse, user]);
 
   // Reinitialize button when amount changes
   useEffect(() => {
-    if (paypalSdkLoaded) {
+    if (paypalSdkLoaded && user?.id) {
       initializePayPalButton();
     }
-  }, [paypalSdkLoaded, selectedAmount, initializePayPalButton]);
+  }, [paypalSdkLoaded, selectedAmount, initializePayPalButton, user]);
 
   const updateSelectedAmount = (amount: string) => {
     setSelectedAmount(amount);
