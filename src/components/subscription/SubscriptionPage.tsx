@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Button } from '../ui/button';
 import HeroSection from '../subscription/components/HeroSection';
 import PricingSection from '../subscription/components/PricingSection';
@@ -8,26 +8,19 @@ import usePaypalIntegration from './utils/usePaypalIntegration';
 
 const SubscriptionPage = () => {
   const paypalButtonContainer = useRef(null);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const handlePaymentSuccess = (pulseAmount: number) => {
     console.log(`Payment successful! Added ${pulseAmount} Pulse`);
   };
 
-  const handlePaymentError = (errorType?: string) => {
-    console.error('Payment error:', errorType || 'unknown error');
-  };
-
-  const handlePaymentProcessing = (isProcessing: boolean) => {
-    setIsProcessingPayment(isProcessing);
-    console.log('Payment processing:', isProcessing);
+  const handlePaymentError = () => {
+    console.error('Payment error occurred');
   };
 
   const { updateSelectedAmount } = usePaypalIntegration({
     containerRef: paypalButtonContainer,
     onPaymentSuccess: handlePaymentSuccess,
-    onPaymentError: handlePaymentError,
-    onPaymentProcessing: handlePaymentProcessing
+    onPaymentError: handlePaymentError
   });
 
   return (
@@ -55,7 +48,6 @@ const SubscriptionPage = () => {
         <PricingSection 
           paypalButtonContainer={paypalButtonContainer}
           updateSelectedAmount={updateSelectedAmount}
-          isProcessingPayment={isProcessingPayment}
         />
         <CommunityImpact />
         <TestimonialsSection />

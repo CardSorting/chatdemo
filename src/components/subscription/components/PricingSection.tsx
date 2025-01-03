@@ -8,13 +8,11 @@ import Confetti from 'react-confetti';
 interface PricingSectionProps {
   paypalButtonContainer: PayPalButtonContainerRef;
   updateSelectedAmount: (amount: string) => void;
-  isProcessingPayment: boolean;
 }
 
 const PricingSection: React.FC<PricingSectionProps> = ({ 
   paypalButtonContainer,
-  updateSelectedAmount,
-  isProcessingPayment
+  updateSelectedAmount
 }) => {
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -41,7 +39,6 @@ const PricingSection: React.FC<PricingSectionProps> = ({
   }, [showSuccess]);
 
   const handleTierSelect = (index: number) => {
-    if (isProcessingPayment) return;
     setSelectedTier(index);
     // Update PayPal amount based on selected tier
     const amount = index === 0 ? '10.00' : index === 1 ? '30.00' : '50.00';
@@ -90,18 +87,10 @@ const PricingSection: React.FC<PricingSectionProps> = ({
               } ${
                 selectedTier === index ? 'ring-2 ring-blue-400' : ''
               } ${
-                isProcessingPayment ? 'opacity-50 pointer-events-none' : ''
-              } ${
                 showSuccess && selectedTier === index ? 'animate-glow' : ''
               }`}
               onClick={() => handleTierSelect(index)}
             >
-              {isProcessingPayment && (
-                <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                </div>
-              )}
-
               {showSuccess && selectedTier === index && (
                 <>
                   <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center">

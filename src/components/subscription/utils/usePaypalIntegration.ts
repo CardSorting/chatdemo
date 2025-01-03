@@ -13,14 +13,12 @@ interface UsePaypalIntegrationProps {
   containerRef: React.RefObject<HTMLDivElement>;
   onPaymentSuccess: (pulseAmount: number) => void;
   onPaymentError: () => void;
-  onPaymentProcessing: (isProcessing: boolean) => void;
 }
 
 const usePaypalIntegration = ({ 
   containerRef,
   onPaymentSuccess,
-  onPaymentError,
-  onPaymentProcessing
+  onPaymentError
 }: UsePaypalIntegrationProps) => {
   const [paypalSdkLoaded, setPaypalSdkLoaded] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState('10.00');
@@ -54,7 +52,6 @@ const usePaypalIntegration = ({
           layout: "vertical",
         },
         createOrder(data: any, actions: any) {
-          onPaymentProcessing(true);
           return actions.order.create({
             purchase_units: [{
               amount: {
@@ -75,22 +72,16 @@ const usePaypalIntegration = ({
             } catch (error) {
               console.error('Payment processing error:', error);
               onPaymentError();
-            } finally {
-              onPaymentProcessing(false);
             }
           });
         },
         onError(err: any) {
           console.error('PayPal error:', err);
           onPaymentError();
-          onPaymentProcessing(false);
-        },
-        onCancel() {
-          onPaymentProcessing(false);
         }
       })
       .render(containerRef.current);
-  }, [paypalSdkLoaded, containerRef, selectedAmount, addPulse, user, onPaymentSuccess, onPaymentError, onPaymentProcessing]);
+  }, [paypalSdkLoaded, containerRef, selectedAmount, addPulse, user, onPaymentSuccess, onPaymentError]);
 
   // Reinitialize button when amount changes
   useEffect(() => {
