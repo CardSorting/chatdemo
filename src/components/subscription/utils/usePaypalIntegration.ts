@@ -14,6 +14,12 @@ interface UsePaypalIntegrationProps {
   onPaymentError: () => void;
 }
 
+interface AddPulseResponse {
+  success: boolean;
+  error?: string;
+  newBalance?: number;
+}
+
 const usePaypalIntegration = ({ 
   onPaymentSuccess,
   onPaymentError
@@ -86,15 +92,15 @@ const usePaypalIntegration = ({
               const pulseAmount = parseFloat(selectedAmount) * 100;
               console.log('Attempting to add pulse:', pulseAmount, 'to user:', user.id);
               
-              const result = await addPulse(pulseAmount);
+              const result: AddPulseResponse = await addPulse(pulseAmount);
               console.log('Pulse addition result:', result);
               
-              if (result.success) {
-                console.log('Calling onPaymentSuccess with amount:', pulseAmount);
-                onPaymentSuccess(pulseAmount);
-              } else {
-                throw new Error('Failed to add pulse: ' + result.error);
+              if (!result.success) {
+                throw new Error(result.error || 'Failed to add pulse');
               }
+
+              console.log('Calling onPaymentSuccess with amount:', pulseAmount);
+              onPaymentSuccess(pulseAmount);
             } catch (error) {
               console.error('Payment processing error:', error);
               onPaymentError();

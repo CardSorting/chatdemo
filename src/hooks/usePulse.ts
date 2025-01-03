@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
+export interface AddPulseResponse {
+  success: boolean;
+  error?: string;
+  newBalance?: number;
+}
+
 export const usePulse = (userId: string) => {
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -30,9 +36,12 @@ export const usePulse = (userId: string) => {
     fetchBalance();
   }, [userId]);
 
-  const addPulse = async (amount: number) => {
+  const addPulse = async (amount: number): Promise<AddPulseResponse> => {
     if (!userId) {
-      throw new Error('User ID is required to add Pulse');
+      return {
+        success: false,
+        error: 'User ID is required to add Pulse'
+      };
     }
 
     try {
@@ -72,17 +81,26 @@ export const usePulse = (userId: string) => {
 
       // Update local state
       setBalance(newBalance);
-      return newBalance;
+      return {
+        success: true,
+        newBalance: newBalance
+      };
     } catch (err) {
       console.error('Error adding Pulse:', err);
       setError(err as Error);
-      throw err;
+      return {
+        success: false,
+        error: (err as Error).message
+      };
     }
   };
 
-  const deductPulse = async (amount: number) => {
+  const deductPulse = async (amount: number): Promise<AddPulseResponse> => {
     if (!userId) {
-      throw new Error('User ID is required to deduct Pulse');
+      return {
+        success: false,
+        error: 'User ID is required to deduct Pulse'
+      };
     }
 
     try {
@@ -122,11 +140,17 @@ export const usePulse = (userId: string) => {
 
       // Update local state
       setBalance(newBalance);
-      return newBalance;
+      return {
+        success: true,
+        newBalance: newBalance
+      };
     } catch (err) {
       console.error('Error deducting Pulse:', err);
       setError(err as Error);
-      throw err;
+      return {
+        success: false,
+        error: (err as Error).message
+      };
     }
   };
 
