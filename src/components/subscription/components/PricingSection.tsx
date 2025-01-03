@@ -19,6 +19,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({
   const [pulseAmount, setPulseAmount] = useState(0);
   const [progress, setProgress] = useState(0);
   const paypalButtonContainer = useRef<HTMLDivElement>(null);
+  const paypalButtonInstance = useRef<any>(null);
 
   const handlePaymentSuccess = useCallback((amount: number) => {
     console.log('[PricingSection] Handling payment success with amount:', amount);
@@ -54,13 +55,33 @@ const PricingSection: React.FC<PricingSectionProps> = ({
   useEffect(() => {
     if (paypalButtonContainer.current) {
       console.log('Initializing PayPal button with container:', paypalButtonContainer.current);
-      initializePayPalButton(paypalButtonContainer.current);
+      
+      // Store the PayPal button instance
+      paypalButtonInstance.current = initializePayPalButton(paypalButtonContainer.current);
     }
 
     return () => {
-      if (paypalButtonContainer.current) {
+      console.log('Cleaning up PayPal button');
+      
+      // First, close the PayPal button instance if it exists
+      if (paypalButtonInstance.current) {
+        try {
+          console.log('Closing PayPal button instance');
+          paypalButtonInstance.current.close();
+        } catch (error) {
+          console.error('Error closing PayPal button instance:', error);
+        }
+      }
+
+      // Then clean up the container if it exists in the DOM
+      if (paypalButtonContainer.current && document.body.contains(paypalButtonContainer.current)) {
         console.log('Cleaning up PayPal button container');
-        paypalButtonContainer.current.innerHTML = '';
+        // Use requestAnimationFrame to ensure cleanup happens after DOM updates
+        requestAnimationFrame(() => {
+          if (paypalButtonContainer.current && document.body.contains(paypalButtonContainer.current)) {
+            paypalButtonContainer.current.innerHTML = '';
+          }
+        });
       }
     };
   }, [initializePayPalButton]);
