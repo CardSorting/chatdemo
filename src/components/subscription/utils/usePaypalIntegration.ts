@@ -40,7 +40,10 @@ const usePaypalIntegration = ({
 
   // Initialize or update PayPal button
   const initializePayPalButton = useCallback(() => {
-    if (!paypalSdkLoaded || !containerRef.current || !user?.id) return;
+    if (!paypalSdkLoaded || !containerRef.current || !user?.id) {
+      console.log('PayPal initialization conditions not met');
+      return;
+    }
 
     // Clear existing buttons
     containerRef.current.innerHTML = '';
@@ -67,8 +70,16 @@ const usePaypalIntegration = ({
             try {
               // Add Pulse credits based on payment amount
               const pulseAmount = parseFloat(selectedAmount) * 100;
-              await addPulse(pulseAmount);
-              onPaymentSuccess(pulseAmount);
+              console.log('Attempting to add pulse:', pulseAmount, 'to user:', user.id);
+              
+              const result = await addPulse(pulseAmount);
+              console.log('Pulse addition result:', result);
+              
+              if (result.success) {
+                onPaymentSuccess(pulseAmount);
+              } else {
+                throw new Error('Failed to add pulse: ' + result.error);
+              }
             } catch (error) {
               console.error('Payment processing error:', error);
               onPaymentError();

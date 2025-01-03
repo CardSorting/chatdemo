@@ -8,11 +8,13 @@ import Confetti from 'react-confetti';
 interface PricingSectionProps {
   paypalButtonContainer: PayPalButtonContainerRef;
   updateSelectedAmount: (amount: string) => void;
+  onPaymentSuccess: (pulseAmount: number) => void;
 }
 
 const PricingSection: React.FC<PricingSectionProps> = ({ 
   paypalButtonContainer,
-  updateSelectedAmount
+  updateSelectedAmount,
+  onPaymentSuccess
 }) => {
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -48,6 +50,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({
   const handlePaymentSuccess = (amount: number) => {
     setPulseAmount(amount);
     setShowSuccess(true);
+    onPaymentSuccess(amount); // Call the parent success handler
   };
 
   return (

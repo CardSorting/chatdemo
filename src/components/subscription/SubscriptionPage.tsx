@@ -48,6 +48,7 @@ const SubscriptionPage = () => {
         <PricingSection 
           paypalButtonContainer={paypalButtonContainer}
           updateSelectedAmount={updateSelectedAmount}
+          onPaymentSuccess={handlePaymentSuccess}
         />
         <CommunityImpact />
         <TestimonialsSection />
