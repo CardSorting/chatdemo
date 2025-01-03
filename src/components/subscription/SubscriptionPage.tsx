@@ -5,73 +5,22 @@ import PricingSection from '../subscription/components/PricingSection';
 import CommunityImpact from '../subscription/components/CommunityImpact';
 import TestimonialsSection from '../subscription/components/TestimonialsSection';
 import usePaypalIntegration from './utils/usePaypalIntegration';
-import { useToast } from '../ui/use-toast';
 
 const SubscriptionPage = () => {
   const paypalButtonContainer = useRef(null);
-  const { toast } = useToast();
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const handlePaymentSuccess = (pulseAmount: number) => {
-    toast({
-      title: (
-        <div className="flex items-center gap-2">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Payment Successful!</span>
-        </div>
-      ),
-      description: `🎉 ${pulseAmount} Pulse has been added to your account. You can start using it immediately!`,
-      duration: 5000,
-      className: 'bg-green-500 text-white border-green-600',
-    });
+    console.log(`Payment successful! Added ${pulseAmount} Pulse`);
   };
 
   const handlePaymentError = (errorType?: string) => {
-    let description = 'There was an issue processing your payment. Please try again.';
-    
-    if (errorType === 'pulse') {
-      description = 'Payment was successful but we encountered an issue adding your Pulse. Please contact support.';
-    } else if (errorType === 'network') {
-      description = 'We encountered a network issue. Please check your connection and try again.';
-    }
-
-    toast({
-      title: (
-        <div className="flex items-center gap-2">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Payment Error</span>
-        </div>
-      ),
-      description,
-      duration: 7000,
-      className: 'bg-red-500 text-white border-red-600',
-      variant: 'destructive',
-      action: (
-        <Button 
-          variant="outline" 
-          className="text-red-500 bg-white hover:bg-gray-100"
-          onClick={() => window.location.reload()}
-        >
-          Try Again
-        </Button>
-      ),
-    });
+    console.error('Payment error:', errorType || 'unknown error');
   };
 
   const handlePaymentProcessing = (isProcessing: boolean) => {
     setIsProcessingPayment(isProcessing);
-    if (isProcessing) {
-      toast({
-        title: 'Processing Payment...',
-        description: 'Please wait while we process your payment.',
-        duration: 3000,
-        className: 'bg-blue-500 text-white border-blue-600',
-      });
-    }
+    console.log('Payment processing:', isProcessing);
   };
 
   const { updateSelectedAmount } = usePaypalIntegration({

@@ -12,7 +12,7 @@ declare global {
 interface UsePaypalIntegrationProps {
   containerRef: React.RefObject<HTMLDivElement>;
   onPaymentSuccess: (pulseAmount: number) => void;
-  onPaymentError: (errorType?: string) => void;
+  onPaymentError: () => void;
   onPaymentProcessing: (isProcessing: boolean) => void;
 }
 
@@ -69,17 +69,12 @@ const usePaypalIntegration = ({
             
             try {
               // Add Pulse credits based on payment amount
-              const pulseAmount = parseFloat(selectedAmount) * 100; // Convert $ to Pulse
-              console.log('Adding Pulse:', pulseAmount, 'to user:', user.id);
-              
+              const pulseAmount = parseFloat(selectedAmount) * 100;
               await addPulse(pulseAmount);
-              console.log('Pulse credits added successfully');
-              
-              // Call success handler
               onPaymentSuccess(pulseAmount);
             } catch (error) {
-              console.error('Failed to add Pulse credits:', error);
-              onPaymentError('pulse');
+              console.error('Payment processing error:', error);
+              onPaymentError();
             } finally {
               onPaymentProcessing(false);
             }
@@ -87,7 +82,7 @@ const usePaypalIntegration = ({
         },
         onError(err: any) {
           console.error('PayPal error:', err);
-          onPaymentError('network');
+          onPaymentError();
           onPaymentProcessing(false);
         },
         onCancel() {
