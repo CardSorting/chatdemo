@@ -13,18 +13,19 @@ import { createCompanion, getAvailableFilters } from "../../services/companion/c
 import { Bot, Loader2, Info, Upload, Sparkles, Tags, Link2, AlertCircle, Smartphone, Monitor, Check, Image, Trash2 } from "lucide-react";
 
 interface CompanionFormData {
-  id: string;
-  name: string;
-  description: string;
-  avatar_url: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  is_public: boolean;
-  tags: string[];
-  creator_name: string;
-  chat_url: string;
-  screenshots: string[];
+    id: string;
+    name: string;
+    description: string;
+    avatar_url: string;
+    avatar_file?: File;
+    created_at: string;
+    updated_at: string;
+    user_id: string;
+    is_public: boolean;
+    tags: string[];
+    creator_name: string;
+    chat_url: string;
+    screenshots: string[];
 }
 
 const SubmitCompanion = () => {
@@ -73,6 +74,18 @@ const SubmitCompanion = () => {
         }));
     };
 
+    const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const imageUrl = URL.createObjectURL(file);
+        setFormData(prev => ({
+            ...prev,
+            avatar_url: imageUrl,
+            avatar_file: file
+        }));
+    };
+
     const removeScreenshot = (index: number) => {
         setFormData(prev => ({
             ...prev,
@@ -86,10 +99,6 @@ const SubmitCompanion = () => {
         }
         const seed = formData.name || "default";
         return `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
-    };
-
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({...formData, avatar_url: e.target.value});
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -274,7 +283,7 @@ const SubmitCompanion = () => {
                                         </li>
                                         <li className="flex items-start gap-2">
                                             <Upload className="w-4 h-4 text-green-500 mt-0.5" />
-                                            <span>Provide a clear avatar URL or let us generate one</span>
+                                            <span>Upload an avatar image or let us generate one</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -350,25 +359,32 @@ const SubmitCompanion = () => {
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <Label htmlFor="avatar_url" className="text-gray-200 cursor-help">
-                                                        Avatar URL
+                                                    <Label htmlFor="avatar" className="text-gray-200 cursor-help">
+                                                        Avatar Image
                                                     </Label>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
-                                                    Provide a URL to your companion's avatar image, or leave blank for an auto-generated one
+                                                    Upload an avatar image for your companion, or leave empty for an auto-generated one
                                                 </TooltipContent>
                                             </Tooltip>
                                         </TooltipProvider>
-                                        <Input
-                                            id="avatar_url"
-                                            value={formData.avatar_url}
-                                            onChange={handleAvatarChange}
-                                            className="bg-black/50 border-green-500/20 text-white focus:border-green-500 transition-colors"
-                                            placeholder="https://example.com/avatar.png"
-                                            type="url"
-                                        />
+                                        <label className="flex items-center justify-center h-32 border-2 border-dashed border-green-500/20 rounded-lg cursor-pointer hover:bg-green-500/10 transition-colors">
+                                            <div className="text-center">
+                                                <Upload className="w-6 h-6 mx-auto text-green-500" />
+                                                <p className="text-sm text-gray-400 mt-2">
+                                                    Upload Avatar Image
+                                                </p>
+                                                <input
+                                                    id="avatar"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleAvatarUpload}
+                                                    className="hidden"
+                                                />
+                                            </div>
+                                        </label>
                                         <p className="text-xs text-gray-400">
-                                            Leave blank for an auto-generated avatar
+                                            Leave empty for an auto-generated avatar
                                         </p>
                                     </div>
 
