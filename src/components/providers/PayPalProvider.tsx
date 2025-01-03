@@ -1,6 +1,5 @@
-import { createContext, useEffect, useRef, ReactNode } from 'react';
+import { createContext, useEffect, useState, ReactNode } from 'react';
 
-// Declare paypal object on window
 declare global {
   interface Window {
     paypal?: any;
@@ -16,62 +15,44 @@ export const PayPalContext = createContext<PayPalContextType>({
 });
 
 export const PayPalProvider = ({ children }: { children: ReactNode }) => {
-  const isLoaded = useRef(false);
-  const script = useRef<HTMLScriptElement | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // If the PayPal SDK is already on window, assume it's loaded
-    if (window.paypal) {
-      isLoaded.current = true;
+    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    if (!clientId) {
+      console.error('PayPalProvider: Missing VITE_PAYPAL_CLIENT_ID environment variable');
       return;
     }
 
-    // Check if the SDK has already been loaded
-    if (isLoaded.current) {
-      return;
+    // Only load script if it doesn't exist
+    if (!document.getElementById('paypal-sdk-script')) {
+      const script = document.createElement('script');
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture`;
+      script.id = 'paypal-sdk-script';
+      script.async = true;
+
+      script.onload = () => {
+        if (window.paypal) {
+          setIsLoaded(true);
+        }
+      };
+
+      script.onerror = () => {
+        console.error('Failed to load PayPal SDK');
+        setIsLoaded(false);
+      };
+
+      document.body.appendChild(script);
+    } else if (window.paypal) {
+      // If script exists and PayPal is loaded, set state
+      setIsLoaded(true);
     }
 
-    // Create script element
-    const scriptElement = document.createElement('script');
-    scriptElement.src = `https://www.paypal.com/sdk/js?client-id=${import.meta.env.VITE_PAYPAL_CLIENT_ID}`;
-    scriptElement.async = true;
-    scriptElement.id = 'paypal-sdk-script';
-    
-    // Handle script load
-    const handleLoad = () => {
-      isLoaded.current = true;
-      console.log('PayPal SDK loaded successfully');
-    };
-
-    // Handle script error
-    const handleError = () => {
-      console.error('Failed to load PayPal SDK');
-      if (script.current) {
-        document.body.removeChild(script.current);
-        script.current = null;
-      }
-    };
-
-    scriptElement.addEventListener('load', handleLoad);
-    scriptElement.addEventListener('error', handleError);
-
-    // Add script to document
-    document.body.appendChild(scriptElement);
-    script.current = scriptElement;
-
-    // Cleanup function
-    return () => {
-      // Only remove script if it hasn't loaded yet
-      if (script.current && !isLoaded.current) {
-        console.log('Removing unloaded PayPal SDK script');
-        document.body.removeChild(script.current);
-        script.current = null;
-      }
-    };
+    // No cleanup needed - let the script persist
   }, []);
 
   return (
-    <PayPalContext.Provider value={{ isLoaded: isLoaded.current }}>
+    <PayPalContext.Provider value={{ isLoaded }}>
       {children}
     </PayPalContext.Provider>
   );

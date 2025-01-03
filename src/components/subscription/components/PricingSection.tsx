@@ -1,84 +1,28 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React from 'react';
 import { Card } from '../../ui/card';
 import { motion } from 'framer-motion';
 import Confetti from 'react-confetti';
-import usePaypalIntegration from '../utils/usePaypalIntegration';
+import { PayPalCheckout } from './PayPalCheckout';
+import { useCheckout } from '../hooks/useCheckout';
 
 interface PricingSectionProps {
   onPaymentSuccess: (pulseAmount: number) => void;
 }
 
-const PricingSection: React.FC<PricingSectionProps> = ({ 
-  onPaymentSuccess
-}) => {
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [pulseAmount, setPulseAmount] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const paypalButtonContainer = useRef<HTMLDivElement>(null);
-  const isMounted = useRef(true);
+const PULSE_AMOUNT = 1000;
+const PRICE_AMOUNT = '10.00';
 
-  const handlePaymentSuccess = useCallback((amount: number) => {
-    console.log('[PricingSection] Handling payment success with amount:', amount);
-    setPulseAmount(amount);
-    setShowSuccess(true);
-    onPaymentSuccess(amount);
-  }, [onPaymentSuccess]);
-
+const PricingSection: React.FC<PricingSectionProps> = ({ onPaymentSuccess }) => {
   const { 
-    initializePayPalButton,
-    isInitializing,
-    initializationError
-  } = usePaypalIntegration({
-    onPaymentSuccess: handlePaymentSuccess,
-    onPaymentError: () => console.error('Payment error occurred')
+    isProcessing,
+    error, 
+    showSuccess,
+    handlePaymentSuccess,
+    handlePaymentError
+  } = useCheckout({
+    pulseAmount: PULSE_AMOUNT,
+    onSuccess: onPaymentSuccess
   });
-
-  useEffect(() => {
-    console.log('[PricingSection] showSuccess changed:', showSuccess);
-    if (showSuccess) {
-      const interval = setInterval(() => {
-        setProgress((prev) => Math.min(prev + 1, 100));
-      }, 20);
-
-      const timer = setTimeout(() => {
-        setShowSuccess(false);
-        setProgress(0);
-      }, 5000);
-
-      return () => {
-        clearInterval(interval);
-        clearTimeout(timer);
-      };
-    }
-  }, [showSuccess]);
-
-  // Initialize PayPal button on mount
-  useEffect(() => {
-    if (!paypalButtonContainer.current) return;
-
-    console.log('Initializing PayPal button');
-    
-    if (paypalButtonContainer.current && document.body.contains(paypalButtonContainer.current)) {
-      initializePayPalButton(paypalButtonContainer.current);
-    }
-
-    // Cleanup function
-    return () => {
-      if (paypalButtonContainer.current && document.body.contains(paypalButtonContainer.current)) {
-        console.log('Cleaning up PayPal button container');
-        while (paypalButtonContainer.current.firstChild) {
-          paypalButtonContainer.current.removeChild(paypalButtonContainer.current.firstChild);
-        }
-      }
-    };
-  }, [initializePayPalButton]);
-
-  // Component unmount cleanup
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
 
   return (
     <div className="relative">
@@ -97,18 +41,9 @@ const PricingSection: React.FC<PricingSectionProps> = ({
             <svg className="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <span>🎉 Success! {pulseAmount} Pulse added to your account</span>
+            <span>🎉 Success! {PULSE_AMOUNT} Pulse added to your account</span>
           </div>
         </>
-      )}
-
-      {initializationError && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-full shadow-lg z-50 flex items-center gap-2">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>{initializationError}</span>
-        </div>
       )}
 
       <div className="max-w-md mx-auto">
@@ -119,8 +54,8 @@ const PricingSection: React.FC<PricingSectionProps> = ({
           <Card className="relative p-8 rounded-lg bg-gray-900 border border-gray-800">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-white">Premium Access</h2>
-              <p className="mt-4 text-4xl font-bold text-white">$10.00</p>
-              <p className="mt-2 text-gray-300">1000 Pulse</p>
+              <p className="mt-4 text-4xl font-bold text-white">${PRICE_AMOUNT}</p>
+              <p className="mt-2 text-gray-300">{PULSE_AMOUNT} Pulse</p>
             </div>
             
             <div className="mt-8 space-y-4">
@@ -146,27 +81,26 @@ const PricingSection: React.FC<PricingSectionProps> = ({
 
             <div className="mt-8">
               <div 
-                ref={paypalButtonContainer} 
-                id="paypal-button-container"
                 className="relative"
               >
-                {isInitializing && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                {isProcessing && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg z-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                   </div>
                 )}
-                {showSuccess && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="absolute -top-8 left-0 right-0 text-center text-green-400 font-bold"
-                  >
-                    Payment Successful!
-                  </motion.div>
+                {error && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg z-10">
+                    <div className="text-red-500 text-sm text-center px-4">
+                      {error}
+                    </div>
+                  </div>
                 )}
+                <PayPalCheckout
+                  amount={PRICE_AMOUNT}
+                  onSuccess={handlePaymentSuccess}
+                  onError={handlePaymentError}
+                />
               </div>
-              <div id="result-message" className="text-white mt-4"></div>
             </div>
           </Card>
         </motion.div>
