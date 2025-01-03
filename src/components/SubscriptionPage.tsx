@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Progress } from './ui/progress';
@@ -6,13 +6,126 @@ import { useAuth } from '../hooks/useAuth';
 import useSubscription from '../hooks/useSubscription';
 import { motion, useAnimation } from 'framer-motion';
 
+// Declare paypal object on window
+declare global {
+  interface Window {
+    paypal: any;
+  }
+}
+
 const SubscriptionPage = () => {
   const { session } = useAuth();
   const { isSubscribed, subscribe, unsubscribe } = useSubscription();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [memberCount, setMemberCount] = useState(1242);
   const [timeLeft, setTimeLeft] = useState(86400); // 24 hours in seconds
+  const [paypalSdkLoaded, setPaypalSdkLoaded] = useState(false);
   const controls = useAnimation();
+  const paypalButtonContainer = useRef(null);
+
+  // Load PayPal SDK
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.VITE_PAYPAL_CLIENT_ID}`;
+    script.async = true;
+    script.onload = () => setPaypalSdkLoaded(true);
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  // Function to show result messages
+  const resultMessage = (message: string) => {
+    const container = document.querySelector("#result-message");
+    if (container) {
+      container.innerHTML = message;
+    }
+  };
+
+  // Initialize PayPal buttons when SDK is loaded
+  useEffect(() => {
+    if (paypalSdkLoaded && paypalButtonContainer.current) {
+      window.paypal
+        .Buttons({
+          style: {
+            shape: "rect",
+            layout: "vertical",
+          },
+          async createSubscription() {
+            try {
+              const response = await fetch("/api/paypal/create-subscription", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userAction: "SUBSCRIBE_NOW" }),
+              });
+              const data = await response.json();
+              if (data?.id) {
+                resultMessage(`Successful subscription...<br><br>`);
+                return data.id;
+              } else {
+                console.error(
+                  { callback: "createSubscription", serverResponse: data },
+                  JSON.stringify(data, null, 2),
+                );
+                const errorDetail = data?.details?.[0];
+                resultMessage(
+                  `Could not initiate PayPal Subscription...<br><br>${
+                    errorDetail?.issue || ""
+                  } ${errorDetail?.description || data?.message || ""} ` +
+                    (data?.debug_id ? `(${data.debug_id})` : ""),
+                );
+              }
+            } catch (error) {
+              console.error(error);
+              resultMessage(
+                `Could not initiate PayPal Subscription...<br><br>${error}`,
+              );
+            }
+          },
+          onApprove(data) {
+            if (data.orderID) {
+              resultMessage(
+                `You have successfully subscribed to the plan. Your subscription id is: ${data.subscriptionID}`,
+              );
+            } else {
+              resultMessage(
+                `Failed to activate the subscription: ${data.subscriptionID}`,
+              );
+            }
+          },
+        })
+        .render(paypalButtonContainer.current);
+    }
+  }, [paypalSdkLoaded]);
+
+  // Countdown timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Member count animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMemberCount(prev => prev + Math.floor(Math.random() * 10));
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours}h ${minutes}m ${secs}s`;
+  };
 
   // Hardcoded testimonials
   const testimonials = [
@@ -35,22 +148,6 @@ const SubscriptionPage = () => {
       text: "As a long-time supporter, I've seen this platform grow into something truly special. Highly recommend!"
     }
   ];
-
-  // Countdown timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours}h ${minutes}m ${secs}s`;
-  };
 
   const subscriptionTiers = [
     {
@@ -95,25 +192,6 @@ const SubscriptionPage = () => {
       color: 'from-yellow-400 to-orange-400'
     }
   ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMemberCount(prev => prev + Math.floor(Math.random() * 10));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleSubscribe = async (tier: string) => {
-    if (!session?.user?.id) {
-      console.error("User not logged in");
-      return;
-    }
-
-    // Placeholder for PayPal integration
-    alert(`Initiating PayPal payment for ${tier} tier.`);
-    subscribe(tier);
-  };
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -234,16 +312,9 @@ const SubscriptionPage = () => {
                 </div>
 
                 <div className="mt-8">
-                  <Button 
-                    className={`w-full font-bold ${
-                      tier.popular 
-                        ? 'bg-gradient-to-r from-green-400 to-blue-400 hover:from-green-500 hover:to-blue-500 text-gray-950'
-                        : 'bg-gray-800 hover:bg-gray-700 text-white'
-                    }`}
-                    onClick={() => handleSubscribe(tier.name.toLowerCase())}
-                  >
-                    Subscribe
-                  </Button>
+                  {!paypalSdkLoaded && <div className="text-white">Loading payment options...</div>}
+                  <div ref={paypalButtonContainer} id="paypal-button-container"></div>
+                  <div id="result-message" className="text-white mt-4"></div>
                 </div>
               </Card>
             </motion.div>
