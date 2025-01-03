@@ -2,7 +2,6 @@ import { Button } from "../../../../components/ui/button";
 import { Gift } from "lucide-react";
 import { TooltipProvider } from "../../../../components/ui/tooltip";
 import { useTipping } from "../../../../lib/tipping/hooks/useTipping";
-import { TippingStats } from "../../../../lib/tipping/components/TippingStats";
 import { useNavigate } from "react-router-dom";
 
 export function TippingSection({ creatorId, creatorName }) {
@@ -21,8 +20,6 @@ export function TippingSection({ creatorId, creatorName }) {
           <Gift className="w-5 h-5" />
           Support {creatorName}
         </Button>
-
-        <TippingStats state={state} creatorName={creatorName} />
       </div>
     </TooltipProvider>
   );

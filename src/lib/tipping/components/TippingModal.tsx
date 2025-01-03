@@ -47,7 +47,7 @@ export function TippingModal({
   return (
     <Dialog open={state.showTipModal} onOpenChange={onClose}>
       {/* 
-        1) Changed h-[90vh] sm:h-[80vh] to max-h so it doesn’t overflow the screen.
+        1) Changed h-[90vh] sm:h-[80vh] to max-h so it doesn't overflow the screen.
         2) Removed sticky bottom-0 z-50 from the footer to avoid z-index collisions.
       */}
       <DialogContent className="max-w-[90vw] sm:max-w-[800px] max-h-[90vh] sm:max-h-[80vh] p-0 flex flex-col">
@@ -181,35 +181,6 @@ export function TippingModal({
                       className="h-2"
                     />
                   </div>
-
-                  {/* Milestones */}
-                  <Card className="p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Zap className="w-5 h-5 text-primary" />
-                      <h3 className="font-medium text-lg">Creator Milestones</h3>
-                    </div>
-                    <div className="space-y-4">
-                      {state.milestones.map((milestone, index) => (
-                        <div key={index} className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>{milestone.description}</span>
-                            <span>
-                              {milestone.current}/{milestone.goal} Pulse
-                            </span>
-                          </div>
-                          <div className="relative h-2">
-                            <Progress
-                              value={getProgressValue(
-                                milestone.current,
-                                milestone.goal
-                              )}
-                              className="h-full"
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
 
                   {/* Top Supporters */}
                   <Card className="p-4">
