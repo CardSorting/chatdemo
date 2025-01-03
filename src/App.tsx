@@ -16,7 +16,7 @@ import { PayPalProvider } from "./components/providers/PayPalProvider";
 import BookmarksPage from "./components/companion/BookmarksPage";
 import CompanionsPage from "./components/companion/companions-page/CompanionsPage";
 import TippingPage from "./components/companion/TippingPage";
-import SubscriptionPage from "./components/subscription/SubscriptionPage";
+import { SubscriptionPage } from "./components/subscription/SubscriptionPage";
 
 function App() {
   return (
