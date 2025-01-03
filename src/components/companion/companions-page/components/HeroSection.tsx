@@ -4,7 +4,6 @@ import { Button } from "../../../../components/ui/button";
 import { Star, MessageSquare, Bookmark, Heart, Share2, Users, MessageCircle, Download, PlayCircle, ChevronRight, Info, Clock, Calendar, Tag, Flag } from "lucide-react";
 import { cn } from "../../../../lib/utils";
 import { Progress } from "../../../../components/ui/progress";
-import { TippingSection } from "./TippingSection";
 import { ScreenshotsSection } from "./ScreenshotsSection";
 
 interface HeroSectionProps {
@@ -132,16 +131,10 @@ export function HeroSection({ companion }: HeroSectionProps) {
                 <MessageSquare className="w-6 h-6" />
                 <span className="text-lg">Start Chatting Now</span>
               </Button>
-              <div className="flex gap-4">
-                <TippingSection 
-                  creatorId={companion.creator_id}
-                  creatorName={companion.creator_name}
-                />
-                <Button className="flex-1 gap-2 h-12" size="lg" variant="outline">
-                  <Share2 className="w-5 h-5" />
-                  Share
-                </Button>
-              </div>
+              <Button className="w-full gap-2 h-12" size="lg" variant="outline">
+                <Share2 className="w-5 h-5" />
+                Share
+              </Button>
             </div>
 
             {/* Developer Section */}

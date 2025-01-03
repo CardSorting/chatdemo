@@ -54,12 +54,12 @@ export const fetchCompanions = async (): Promise<Companion[]> => {
   }
 };
 
-export const getCompanion = async (id: string): Promise<Companion | null> => {
+export const getCompanion = async (companionId: string): Promise<Companion | null> => {
   try {
     const { data, error } = await supabase
       .from('companions')
       .select('*')
-      .eq('id', id)
+      .eq('id', companionId)
       .single();
 
     if (error) throw error;

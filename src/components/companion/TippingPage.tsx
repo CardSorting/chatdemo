@@ -17,7 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../
 import { Companion, getCompanion } from "@lib/companions";
 
 export default function TippingPage() {
-  const { creatorId } = useParams();
+  const { companionId } = useParams();
   const navigate = useNavigate();
   const [isSharing, setIsSharing] = useState(false);
   const [companion, setCompanion] = useState<Companion | null>(null);
@@ -28,15 +28,15 @@ export default function TippingPage() {
     handleTip,
     handleCustomAmountChange,
     isLoading
-  } = useTipping(creatorId) as UseTippingReturn;
+  } = useTipping(companionId) as UseTippingReturn;
 
   const nextMilestone = state.milestones?.find(m => m.current < m.goal) || null;
 
   useEffect(() => {
     const fetchCompanion = async () => {
       try {
-        if (creatorId) {
-          const data = await getCompanion(creatorId);
+        if (companionId) {
+          const data = await getCompanion(companionId);
           setCompanion(data);
         }
       } catch (error) {
@@ -51,7 +51,7 @@ export default function TippingPage() {
     };
 
     fetchCompanion();
-  }, [creatorId]);
+  }, [companionId]);
 
   const handleShare = async () => {
     try {

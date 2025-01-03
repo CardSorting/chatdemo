@@ -6,17 +6,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+} from "../../components/ui/table";
+import { Button } from "../../components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "../../components/ui/dropdown-menu";
 import { MoreHorizontal, Shield, ShieldOff } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { Profile } from "@/lib/auth";
+import { supabase } from "../../lib/supabase";
+import { Profile } from "../../types/profile";
 import { format } from "date-fns";
 
 const UsersPage = () => {
