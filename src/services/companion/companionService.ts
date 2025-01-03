@@ -118,6 +118,20 @@ export const bookmarkCompanion = async (companionId: string) => {
   }
 };
 
+export const getCompanionsByUser = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('companions')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching user companions:', error);
+    throw error;
+  }
+
+  return data;
+};
+
 export const getBookmarkedCompanions = async ({
   page = 1,
   pageSize = 10,

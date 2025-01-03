@@ -18,6 +18,7 @@ export interface Companion {
   moderated_at?: string;
   moderated_by?: string;
   screenshots: string[];
+  bookmarkedAt?: string;
 }
 
 export const fetchCompanions = async (): Promise<Companion[]> => {
@@ -46,7 +47,8 @@ export const fetchCompanions = async (): Promise<Companion[]> => {
       moderation_feedback: companion.moderation_feedback,
       moderated_at: companion.moderated_at,
       moderated_by: companion.moderated_by,
-      screenshots: companion.screenshots || []
+      screenshots: companion.screenshots || [],
+      bookmarkedAt: companion.bookmarkedAt
     }));
   } catch (error) {
     console.error('Error fetching companions:', error);
@@ -82,7 +84,8 @@ export const getCompanion = async (companionId: string): Promise<Companion | nul
       moderation_feedback: data.moderation_feedback,
       moderated_at: data.moderated_at,
       moderated_by: data.moderated_by,
-      screenshots: data.screenshots || []
+      screenshots: data.screenshots || [],
+      bookmarkedAt: data.bookmarkedAt
     };
   } catch (error) {
     console.error('Error fetching companion:', error);
