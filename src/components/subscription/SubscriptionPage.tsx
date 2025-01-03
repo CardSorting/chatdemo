@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Button } from '../ui/button';
 import HeroSection from '../subscription/components/HeroSection';
 import PricingSection from '../subscription/components/PricingSection';
@@ -7,7 +7,8 @@ import TestimonialsSection from '../subscription/components/TestimonialsSection'
 import usePaypalIntegration from './utils/usePaypalIntegration';
 
 const SubscriptionPage = () => {
-  const { paypalButtonContainer } = usePaypalIntegration();
+  const paypalButtonContainer = useRef(null);
+  const { updateSelectedAmount } = usePaypalIntegration(paypalButtonContainer);
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -31,7 +32,10 @@ const SubscriptionPage = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <PricingSection paypalButtonContainer={paypalButtonContainer} />
+        <PricingSection 
+          paypalButtonContainer={paypalButtonContainer}
+          updateSelectedAmount={updateSelectedAmount}
+        />
         <CommunityImpact />
         <TestimonialsSection />
       </div>
