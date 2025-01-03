@@ -27,10 +27,17 @@ export function useTipping(creatorId: string): UseTippingReturn {
   });
 
   useEffect(() => {
-    if (state.showTipModal && session?.user?.id) {
+    if (session?.user?.id) {
       fetchData();
     }
-  }, [state.showTipModal, session?.user?.id]);
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (state.showTipModal && session?.user?.id) {
+      // Refresh data when modal is shown
+      fetchData();
+    }
+  }, [state.showTipModal]);
 
   const fetchData = async () => {
     setState(prev => ({ ...prev, isLoading: true }));

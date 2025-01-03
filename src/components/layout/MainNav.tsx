@@ -27,7 +27,7 @@ const MainNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, loading: authLoading, signOut } = useAuth();
-  const { balance } = usePulse(user?.id || '');
+  const { balance, loading: pulseLoading } = usePulse(user?.id || '');
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -103,7 +103,7 @@ const MainNav = () => {
 
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="border-green-500/20 text-green-400">
-                        {balance} Pulse
+                        {pulseLoading ? "..." : `${balance} Pulse`}
                       </Badge>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

@@ -159,7 +159,7 @@ export default function CompanionsPage() {
                 <div>
                   <h4 className="font-medium">Your Balance</h4>
                   <p className="text-xl sm:text-2xl font-bold">
-                    {state.userBalance} Pulse
+                    {state.isLoading ? "..." : `${state.userBalance} Pulse`}
                   </p>
                 </div>
                 <TooltipProvider>
@@ -185,11 +185,11 @@ export default function CompanionsPage() {
                     variant={state.tipAmount === amount ? "default" : "outline"}
                     onClick={() => setTipAmount(amount)}
                     className={`h-14 transition-all ${
-                      amount <= state.userBalance
+                      !state.isLoading && amount <= state.userBalance
                         ? "hover:scale-[1.02]"
                         : "opacity-50 cursor-not-allowed"
                     }`}
-                    disabled={amount > state.userBalance}
+                    disabled={state.isLoading || amount > state.userBalance}
                   >
                     {amount} Pulse
                   </Button>
@@ -251,6 +251,7 @@ export default function CompanionsPage() {
                 state.customAmount ? handleTip(parseFloat(state.customAmount)) : handleTip(state.tipAmount)
               }
               disabled={
+                state.isLoading ||
                 isTippingLoading ||
                 (state.customAmount && !state.isValidAmount)
               }

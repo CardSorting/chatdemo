@@ -1,14 +1,8 @@
 import { supabase } from '../../lib/supabase';
-import { Pulse, ProfileWithPulse } from '../../types/profile';
+import { ProfileWithPulse } from '../../types/profile';
 import { Database } from '../../types/supabase';
-import { useAuth } from '../../lib/auth';
 
 export const getPulseBalance = async (userId: string): Promise<number> => {
-  const { session } = useAuth();
-  
-  if (!session) {
-    throw new Error('User not authenticated');
-  }
 
   if (!userId || typeof userId !== 'string') {
     throw new Error('Invalid user ID');
@@ -16,18 +10,13 @@ export const getPulseBalance = async (userId: string): Promise<number> => {
 
   try {
     const { data, error } = await supabase
-      .from('pulse')
-      .select('balance')
-      .eq('user_id', userId)
+      .from('profiles')
+      .select('pulse_balance')
+      .eq('id', userId)
       .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') { // No rows found
-        return 0;
-      }
-      throw error;
-    }
-    return (data?.balance as number) || 0;
+    if (error) throw error;
+    return (data?.pulse_balance as number) || 0;
   } catch (error) {
     console.error('Error fetching Pulse balance:', error);
     return 0;
@@ -37,33 +26,18 @@ export const getPulseBalance = async (userId: string): Promise<number> => {
 export const updatePulseBalance = async (
   userId: string,
   amount: number
-): Promise<Pulse> => {
-  const { session } = useAuth();
-  
-  if (!session) {
-    throw new Error('User not authenticated');
-  }
+): Promise<number> => {
 
   try {
     const { data, error } = await supabase
-      .from('pulse')
-      .upsert({ 
-        user_id: userId, 
-        balance: amount 
-      }, {
-        onConflict: 'user_id'
-      })
-      .select()
+      .from('profiles')
+      .update({ pulse_balance: amount })
+      .eq('id', userId)
+      .select('pulse_balance')
       .single();
 
     if (error) throw error;
-    return {
-      id: data.id,
-      user_id: data.user_id,
-      balance: data.balance,
-      created_at: data.created_at,
-      updated_at: data.updated_at
-    } as Pulse;
+    return data.pulse_balance;
   } catch (error) {
     console.error('Error updating Pulse balance:', error);
     throw error;
@@ -75,11 +49,6 @@ export const sendTip = async (
   recipientId: string,
   amount: number
 ): Promise<{ success: boolean; message: string }> => {
-  const { session } = useAuth();
-  
-  if (!session) {
-    return { success: false, message: 'User not authenticated' };
-  }
 
   if (amount <= 0) {
     return { success: false, message: 'Tip amount must be positive' };
@@ -115,16 +84,11 @@ export const sendTip = async (
 export const getProfileWithPulse = async (
   userId: string
 ): Promise<ProfileWithPulse> => {
-  const { session } = useAuth();
-  
-  if (!session) {
-    throw new Error('User not authenticated');
-  }
 
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, pulse!inner(*)')
+      .select('*')
       .eq('id', userId)
       .single();
 
@@ -143,13 +107,7 @@ export const getProfileWithPulse = async (
       theme: data.theme,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      pulse: {
-        id: data.pulse[0].id,
-        user_id: data.pulse[0].user_id,
-        balance: data.pulse[0].balance,
-        created_at: data.pulse[0].created_at,
-        updated_at: data.pulse[0].updated_at
-      }
+      pulse_balance: data.pulse_balance
     } as ProfileWithPulse;
   } catch (error) {
     console.error('Error fetching profile with Pulse:', error);

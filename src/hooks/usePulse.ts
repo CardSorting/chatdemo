@@ -14,7 +14,12 @@ export const usePulse = (userId: string) => {
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!userId) return;
+      // Reset balance to 0 if no userId
+      if (!userId || userId === '') {
+        setBalance(0);
+        setLoading(false);
+        return;
+      }
 
       try {
         const { data, error } = await supabase
@@ -23,11 +28,19 @@ export const usePulse = (userId: string) => {
           .eq('id', userId)
           .single();
 
-        if (error) throw error;
-        if (data) setBalance(data.pulse_balance);
+        if (error) {
+          if (error.code === 'PGRST116') { // No rows found
+            setBalance(0);
+          } else {
+            throw error;
+          }
+        } else if (data) {
+          setBalance(data.pulse_balance || 0);
+        }
       } catch (err) {
         console.error('Error fetching pulse balance:', err);
         setError(err as Error);
+        setBalance(0);
       } finally {
         setLoading(false);
       }
@@ -37,7 +50,7 @@ export const usePulse = (userId: string) => {
   }, [userId]);
 
   const addPulse = async (amount: number): Promise<AddPulseResponse> => {
-    if (!userId) {
+    if (!userId || userId === '') {
       return {
         success: false,
         error: 'User ID is required to add Pulse'
@@ -53,16 +66,15 @@ export const usePulse = (userId: string) => {
         .single();
 
       if (currentError) throw currentError;
-      if (!currentData) throw new Error('User profile not found');
 
-      const newBalance = currentData.pulse_balance + amount;
+      const newBalance = (currentData?.pulse_balance || 0) + amount;
 
       // Update balance in profiles table
       const { data: updatedData, error: updateError } = await supabase
         .from('profiles')
         .update({ pulse_balance: newBalance })
         .eq('id', userId)
-        .select()
+        .select('pulse_balance')
         .single();
 
       if (updateError) throw updateError;
@@ -96,7 +108,7 @@ export const usePulse = (userId: string) => {
   };
 
   const deductPulse = async (amount: number): Promise<AddPulseResponse> => {
-    if (!userId) {
+    if (!userId || userId === '') {
       return {
         success: false,
         error: 'User ID is required to deduct Pulse'
@@ -112,7 +124,14 @@ export const usePulse = (userId: string) => {
         .single();
 
       if (currentError) throw currentError;
-      if (!currentData) throw new Error('User profile not found');
+      if (!currentData) throw new Error('Profile not found');
+
+      if ((currentData.pulse_balance || 0) < amount) {
+        return {
+          success: false,
+          error: 'Insufficient balance'
+        };
+      }
 
       const newBalance = currentData.pulse_balance - amount;
 
@@ -121,7 +140,7 @@ export const usePulse = (userId: string) => {
         .from('profiles')
         .update({ pulse_balance: newBalance })
         .eq('id', userId)
-        .select()
+        .select('pulse_balance')
         .single();
 
       if (updateError) throw updateError;

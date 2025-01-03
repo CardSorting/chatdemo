@@ -10,6 +10,7 @@ export interface Profile {
   email_notifications: boolean;
   visibility: ProfileVisibility;
   theme: Theme;
+  pulse_balance: number;
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +35,7 @@ export interface ProfileUpdateData {
   email_notifications?: boolean;
   visibility?: ProfileVisibility;
   theme?: Theme;
+  pulse_balance?: number;
 }
 
 export interface ProfileUpdateResponse {
@@ -44,14 +46,5 @@ export interface ProfileUpdateResponse {
 export type ProfileVisibility = "public" | "private" | "followers";
 export type Theme = "dark" | "light" | "system";
 
-export interface Pulse {
-  id: string;
-  user_id: string;
-  balance: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ProfileWithPulse extends Profile {
-  pulse: Pulse;
-}
+// ProfileWithPulse is now just an alias for Profile since pulse_balance is part of the profile
+export type ProfileWithPulse = Profile;
