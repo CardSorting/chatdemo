@@ -60,7 +60,9 @@ const PricingSection: React.FC<PricingSectionProps> = ({
     console.log('Initializing PayPal button with container:', paypalButtonContainer.current);
     
     // Store the PayPal button instance
-    paypalButtonInstance.current = initializePayPalButton(paypalButtonContainer.current);
+    if (paypalButtonContainer.current && document.body.contains(paypalButtonContainer.current)) {
+      paypalButtonInstance.current = initializePayPalButton(paypalButtonContainer.current);
+    }
 
     return () => {
       if (!isMounted.current) return;
@@ -71,10 +73,11 @@ const PricingSection: React.FC<PricingSectionProps> = ({
       if (paypalButtonInstance.current) {
         try {
           console.log('Closing PayPal button instance');
-          paypalButtonInstance.current.close();
-          paypalButtonInstance.current = null;
+          paypalButtonInstance.current.close?.();
         } catch (error) {
           console.error('Error closing PayPal button instance:', error);
+        } finally {
+          paypalButtonInstance.current = null;
         }
       }
 
@@ -84,7 +87,9 @@ const PricingSection: React.FC<PricingSectionProps> = ({
         // Use requestAnimationFrame to ensure cleanup happens after DOM updates
         requestAnimationFrame(() => {
           if (paypalButtonContainer.current && document.body.contains(paypalButtonContainer.current)) {
-            paypalButtonContainer.current.innerHTML = '';
+            while (paypalButtonContainer.current.firstChild) {
+              paypalButtonContainer.current.removeChild(paypalButtonContainer.current.firstChild);
+            }
           }
         });
       }

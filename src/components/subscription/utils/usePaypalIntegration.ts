@@ -74,6 +74,12 @@ const usePaypalIntegration = ({
         return;
       }
 
+      // Check if window.paypal is defined before proceeding
+      if (!window.paypal) {
+        console.log('window.paypal is not defined yet');
+        return;
+      }
+
       // If there’s already a PayPal button rendered, optionally destroy it
       if (paypalButtonRef.current) {
         try {
@@ -90,7 +96,11 @@ const usePaypalIntegration = ({
       console.log('All conditions met, initializing PayPal button');
 
       // Clear existing HTML in case it was previously rendered
-      container.innerHTML = '';
+      if (container.firstChild) {
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
+      }
 
       // Render a new PayPal button instance
       const buttonInstance = window.paypal
