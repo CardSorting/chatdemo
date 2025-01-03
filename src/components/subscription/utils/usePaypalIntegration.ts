@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
+import { usePulse } from '../../../hooks/usePulse';
+import { useAuth } from '../../../hooks/useAuth';
 
 // Declare paypal object on window
 declare global {
@@ -10,6 +12,8 @@ declare global {
 const usePaypalIntegration = (containerRef: React.RefObject<HTMLDivElement>) => {
   const [paypalSdkLoaded, setPaypalSdkLoaded] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState('10.00');
+  const { user } = useAuth();
+  const { addPulse } = usePulse(user?.id || '');
 
   // Load PayPal SDK
   useEffect(() => {
@@ -47,9 +51,17 @@ const usePaypalIntegration = (containerRef: React.RefObject<HTMLDivElement>) => 
           });
         },
         onApprove(data: any, actions: any) {
-          return actions.order.capture().then(function(details: any) {
+          return actions.order.capture().then(async function(details: any) {
             console.log('Payment approved:', details);
-            // Handle payment approval
+            
+            // Add Pulse credits based on payment amount
+            const pulseAmount = parseFloat(selectedAmount) * 100; // Convert $ to Pulse
+            try {
+              await addPulse(pulseAmount);
+              console.log('Pulse credits added successfully');
+            } catch (error) {
+              console.error('Failed to add Pulse credits:', error);
+            }
           });
         },
         onError(err: any) {
@@ -57,7 +69,7 @@ const usePaypalIntegration = (containerRef: React.RefObject<HTMLDivElement>) => 
         }
       })
       .render(containerRef.current);
-  }, [paypalSdkLoaded, containerRef, selectedAmount]);
+  }, [paypalSdkLoaded, containerRef, selectedAmount, addPulse]);
 
   // Reinitialize button when amount changes
   useEffect(() => {
