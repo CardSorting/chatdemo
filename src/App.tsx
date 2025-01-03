@@ -34,7 +34,7 @@ function App() {
             <Route path="/submit" element={<SubmitCompanion />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/user/:userId" element={<UserProfile />} />
+            <Route path="/user/profile/:userId" element={<UserProfile />} />
             <Route path="/bookmarks" element={<BookmarksPage />} />
             <Route path="/companions/:companionId" element={<CompanionsPage />} />
             <Route path="/companions/:companionId/tip" element={<TippingPage />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Footer from "../landing/Footer";
 import { getCompanionsByUser } from "../../services/companion/companionService";
 import Gallery from "../landing/Gallery";
@@ -14,7 +14,8 @@ import { Companion } from "../../lib/companions";
 const UserProfile = () => {
   const [companions, setCompanions] = useState<Companion[]>([]);
   const [loading, setLoading] = useState(true);
-  const { profile } = useProfile();
+  const { userId } = useParams();
+  const { profile, loading: profileLoading } = useProfile(userId);
   const navigate = useNavigate();
 
   const fetchUserCompanions = async (page: number): Promise<Companion[]> => {
@@ -46,27 +47,24 @@ const UserProfile = () => {
     loadInitialCompanions();
   }, [profile]);
 
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white pt-20 flex items-center justify-center">
+        <LoadingSpinner className="w-12 h-12 text-green-400 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white pt-20">
       <div className="relative bg-gradient-to-b from-green-500/10 via-green-500/5 to-transparent py-16 mb-8 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-green-500/10 via-transparent to-transparent opacity-50 animate-pulse-slow" />
         <div className="container mx-auto px-4 relative">
           <div className="flex items-start gap-6 mb-8">
-            <div className="bg-green-500/10 p-4 rounded-xl backdrop-blur-sm">
-              <Avatar className="w-16 h-16">
-                <AvatarImage src={profile?.avatar_url} />
-                <AvatarFallback>
-                  <User className="w-8 h-8 text-green-400" />
-                </AvatarFallback>
-              </Avatar>
-            </div>
             <div className="flex-1">
               <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
-                {profile?.username || "User Profile"}
+                {profile?.username || "Collection For You"}
               </h1>
-              <p className="text-gray-400 text-lg max-w-2xl leading-relaxed">
-                {profile?.bio || "This is your profile page where you can view your submitted companions."}
-              </p>
             </div>
           </div>
         </div>
