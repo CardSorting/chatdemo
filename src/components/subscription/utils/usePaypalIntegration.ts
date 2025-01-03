@@ -19,17 +19,44 @@ const usePaypalIntegration = ({
   onPaymentError,
 }: UsePaypalIntegrationProps) => {
   const [selectedAmount, setSelectedAmount] = useState('10.00');
-  const { user } = useAuth();
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
+  const { user, loading: isAuthLoading } = useAuth();
   const { addPulse } = usePulse(user?.id || '');
-  const { isLoaded } = useContext(PayPalContext);
+  const { isLoaded: isPayPalLoaded } = useContext(PayPalContext);
   const paypalButtonRef = useRef<any>(null);
+  const initializationAttempts = useRef(0);
 
   const initializePayPalButton = useCallback(
     (container: HTMLDivElement | null) => {
-      if (!container || !user?.id || !isLoaded) {
-        console.log('Initialization conditions not met');
+      if (!container) {
+        setInitializationError('Payment container not found');
         return;
       }
+
+      if (!user?.id) {
+        setInitializationError('User not authenticated');
+        return;
+      }
+
+      if (!isPayPalLoaded) {
+        setInitializationError('PayPal SDK not loaded');
+        return;
+      }
+
+      if (isAuthLoading) {
+        setInitializationError('Waiting for authentication');
+        return;
+      }
+
+      // Prevent multiple initialization attempts
+      if (isInitializing) {
+        return;
+      }
+
+      setIsInitializing(true);
+      initializationAttempts.current += 1;
+      setInitializationError(null);
 
       // If there's already a PayPal button rendered, destroy it
       if (paypalButtonRef.current) {
@@ -48,59 +75,75 @@ const usePaypalIntegration = ({
         }
       }
 
-      // Render new PayPal button instance
-      const buttonInstance = window.paypal
-        .Buttons({
-          style: {
-            shape: 'rect',
-            layout: 'vertical',
-          },
-          createOrder(data: any, actions: any) {
-            console.log('Creating PayPal order');
-            return actions.order.create({
-              purchase_units: [
-                {
-                  amount: {
-                    value: selectedAmount,
-                  },
-                },
-              ],
-            });
-          },
-          onApprove(data: any, actions: any) {
-            console.log('PayPal payment approved');
-            return actions.order.capture().then(async (details: any) => {
-              console.log('Payment captured:', details);
+      // Wait for PayPal to be fully initialized
+      const initialize = () => {
+        try {
+          const buttonInstance = window.paypal
+            .Buttons({
+              style: {
+                shape: 'rect',
+                layout: 'vertical',
+              },
+              createOrder(data: any, actions: any) {
+                console.log('Creating PayPal order');
+                return actions.order.create({
+                  purchase_units: [
+                    {
+                      amount: {
+                        value: selectedAmount,
+                      },
+                    },
+                  ],
+                });
+              },
+              onApprove(data: any, actions: any) {
+                console.log('PayPal payment approved');
+                return actions.order.capture().then(async (details: any) => {
+                  console.log('Payment captured:', details);
 
-              try {
-                const pulseAmount = parseFloat(selectedAmount) * 100;
-                console.log('Attempting to add pulse:', pulseAmount, 'to user:', user.id);
+                  try {
+                    const pulseAmount = parseFloat(selectedAmount) * 100;
+                    console.log('Attempting to add pulse:', pulseAmount, 'to user:', user.id);
 
-                const result: AddPulseResponse = await addPulse(pulseAmount);
-                console.log('Pulse addition result:', result);
+                    const result: AddPulseResponse = await addPulse(pulseAmount);
+                    console.log('Pulse addition result:', result);
 
-                if (!result.success) {
-                  throw new Error(result.error || 'Failed to add pulse');
-                }
+                    if (!result.success) {
+                      throw new Error(result.error || 'Failed to add pulse');
+                    }
 
-                console.log('Calling onPaymentSuccess with amount:', pulseAmount);
-                onPaymentSuccess(pulseAmount);
-              } catch (error) {
-                console.error('Payment processing error:', error);
+                    console.log('Calling onPaymentSuccess with amount:', pulseAmount);
+                    onPaymentSuccess(pulseAmount);
+                  } catch (error) {
+                    console.error('Payment processing error:', error);
+                    onPaymentError();
+                  }
+                });
+              },
+              onError(err: any) {
+                console.error('PayPal error:', err);
                 onPaymentError();
-              }
-            });
-          },
-          onError(err: any) {
-            console.error('PayPal error:', err);
-            onPaymentError();
-          },
-        })
-        .render(container);
+              },
+            })
+            .render(container);
 
-      paypalButtonRef.current = buttonInstance;
+          paypalButtonRef.current = buttonInstance;
+          setIsInitializing(false);
+        } catch (error) {
+          console.error('PayPal button initialization error:', error);
+          setIsInitializing(false);
+          setInitializationError('Failed to initialize PayPal button');
+          
+          // Retry initialization if it fails
+          if (initializationAttempts.current < 3) {
+            setTimeout(initialize, 1000);
+          }
+        }
+      };
+
+      initialize();
     },
-    [selectedAmount, user, addPulse, onPaymentSuccess, onPaymentError, isLoaded]
+    [selectedAmount, user, addPulse, onPaymentSuccess, onPaymentError, isPayPalLoaded, isInitializing, isAuthLoading]
   );
 
   const updateSelectedAmount = (amount: string) => {
@@ -120,7 +163,12 @@ const usePaypalIntegration = ({
     };
   }, []);
 
-  return { initializePayPalButton, updateSelectedAmount };
+  return { 
+    initializePayPalButton, 
+    updateSelectedAmount,
+    isInitializing,
+    initializationError
+  };
 };
 
 export default usePaypalIntegration;
