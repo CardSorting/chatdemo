@@ -13,26 +13,37 @@ export interface Companion {
   created_at: string;
   updated_at: string;
   is_featured: boolean;
+  screenshots: string[];
 }
 
 export const fetchCompanions = async (): Promise<Companion[]> => {
-  // TODO: Implement actual data fetching logic
-  return [
-    {
-      id: "1",
-      name: "Example Companion",
-      creator_name: "Creator",
-      creator_id: "1",
-      avatar_url: "https://example.com/avatar.jpg",
-      description: "This is an example companion",
-      messages_count: 100,
-      likes_count: 50,
-      chat_url: "https://example.com/chat",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_featured: false
-    }
-  ];
+  try {
+    const { data, error } = await supabase
+      .from('companions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return data.map(companion => ({
+      id: companion.id,
+      name: companion.name,
+      creator_name: companion.creator_name,
+      creator_id: companion.creator_id,
+      avatar_url: companion.avatar_url,
+      description: companion.description,
+      messages_count: companion.messages_count,
+      likes_count: companion.likes_count,
+      chat_url: companion.chat_url,
+      created_at: companion.created_at,
+      updated_at: companion.updated_at,
+      is_featured: companion.is_featured,
+      screenshots: companion.screenshots || []
+    }));
+  } catch (error) {
+    console.error('Error fetching companions:', error);
+    return [];
+  }
 };
 
 export const getCompanion = async (id: string): Promise<Companion | null> => {
@@ -58,10 +69,49 @@ export const getCompanion = async (id: string): Promise<Companion | null> => {
       chat_url: data.chat_url,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      is_featured: data.is_featured
+      is_featured: data.is_featured,
+      screenshots: data.screenshots || []
     };
   } catch (error) {
     console.error('Error fetching companion:', error);
     return null;
+  }
+};
+
+export const uploadScreenshots = async (companionId: string, screenshots: File[]): Promise<string[]> => {
+  try {
+    const uploadPromises = screenshots.map(async (file) => {
+      const filePath = `companions/${companionId}/screenshots/${file.name}`;
+      const { data, error } = await supabase
+        .storage
+        .from('companion-screenshots')
+        .upload(filePath, file);
+
+      if (error) throw error;
+      return data.path;
+    });
+
+    const paths = await Promise.all(uploadPromises);
+    return paths;
+  } catch (error) {
+    console.error('Error uploading screenshots:', error);
+    throw error;
+  }
+};
+
+export const getScreenshotUrls = async (paths: string[]): Promise<string[]> => {
+  try {
+    const urlPromises = paths.map(async (path) => {
+      const { data } = supabase
+        .storage
+        .from('companion-screenshots')
+        .getPublicUrl(path);
+      return data.publicUrl;
+    });
+
+    return await Promise.all(urlPromises);
+  } catch (error) {
+    console.error('Error getting screenshot URLs:', error);
+    throw error;
   }
 };

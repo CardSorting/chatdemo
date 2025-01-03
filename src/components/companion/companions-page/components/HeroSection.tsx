@@ -3,9 +3,9 @@ import { Card } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
 import { Star, MessageSquare, Bookmark, Heart, Share2, Users, MessageCircle, Download, PlayCircle, ChevronRight, Info, Clock, Calendar, Tag, Flag } from "lucide-react";
 import { cn } from "../../../../lib/utils";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../../../../components/ui/carousel";
 import { Progress } from "../../../../components/ui/progress";
 import { TippingSection } from "./TippingSection";
+import { ScreenshotsSection } from "./ScreenshotsSection";
 
 interface HeroSectionProps {
   companion: {
@@ -170,32 +170,8 @@ export function HeroSection({ companion }: HeroSectionProps) {
             )}
           </div>
 
-          {/* Right Column - Screenshots Carousel */}
-          <div className="relative">
-            {screenshots.length > 0 ? (
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {screenshots.map((screenshot, index) => (
-                    <CarouselItem key={index}>
-                      <div className="aspect-[4/3] bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
-                        <img
-                          src={screenshot}
-                          alt={`Screenshot ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2" />
-                <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2" />
-              </Carousel>
-            ) : (
-              <div className="aspect-[4/3] bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
-                <p className="text-gray-400">No screenshots available</p>
-              </div>
-            )}
-          </div>
+          {/* Right Column - Screenshots */}
+          <ScreenshotsSection screenshots={screenshots} />
         </div>
       </div>
     </div>

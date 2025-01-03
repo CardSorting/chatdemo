@@ -10,7 +10,7 @@ import { Progress } from "../ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { useAuth } from "../../lib/auth";
 import { createCompanion, getAvailableFilters } from "../../services/companion/companion";
-import { Bot, Loader2, Info, Upload, Sparkles, Tags, Link2, AlertCircle, Smartphone, Monitor, Check } from "lucide-react";
+import { Bot, Loader2, Info, Upload, Sparkles, Tags, Link2, AlertCircle, Smartphone, Monitor, Check, Image, Trash2 } from "lucide-react";
 
 interface CompanionFormData {
   id: string;
@@ -24,6 +24,7 @@ interface CompanionFormData {
   tags: string[];
   creator_name: string;
   chat_url: string;
+  screenshots: string[];
 }
 
 const SubmitCompanion = () => {
@@ -44,7 +45,8 @@ const SubmitCompanion = () => {
         is_public: true,
         tags: [],
         creator_name: user?.user_metadata?.full_name || "",
-        chat_url: ""
+        chat_url: "",
+        screenshots: []
     });
     const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
@@ -59,6 +61,24 @@ const SubmitCompanion = () => {
         };
         fetchCategories();
     }, []);
+
+    const handleScreenshotUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+
+        const newScreenshots = Array.from(files).map(file => URL.createObjectURL(file));
+        setFormData(prev => ({
+            ...prev,
+            screenshots: [...prev.screenshots, ...newScreenshots]
+        }));
+    };
+
+    const removeScreenshot = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            screenshots: prev.screenshots.filter((_, i) => i !== index)
+        }));
+    };
 
     const getPreviewImage = (): string => {
         if (formData.avatar_url) {
@@ -89,10 +109,11 @@ const SubmitCompanion = () => {
     // Calculate form progress
     useEffect(() => {
         let progress = 0;
-        if (formData.name) progress += 25;
-        if (formData.description) progress += 25;
-        if (formData.chat_url) progress += 25;
-        if (formData.tags.length > 0) progress += 25;
+        if (formData.name) progress += 20;
+        if (formData.description) progress += 20;
+        if (formData.chat_url) progress += 20;
+        if (formData.tags.length > 0) progress += 20;
+        if (formData.screenshots.length > 0) progress += 20;
         setFormProgress(progress);
     }, [formData]);
 
@@ -190,6 +211,49 @@ const SubmitCompanion = () => {
                                 </div>
                             </Card>
                         </div>
+                    </div>
+
+                    {/* Screenshots Section */}
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-semibold text-green-400 flex items-center gap-2">
+                            <Image className="w-5 h-5" />
+                            Screenshots
+                        </h2>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {formData.screenshots.map((screenshot, index) => (
+                                <div key={index} className="relative group">
+                                    <img
+                                        src={screenshot}
+                                        alt={`Screenshot ${index + 1}`}
+                                        className="w-full h-48 object-cover rounded-lg"
+                                    />
+                                    <button
+                                        onClick={() => removeScreenshot(index)}
+                                        className="absolute top-2 right-2 p-2 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <Trash2 className="w-4 h-4 text-white" />
+                                    </button>
+                                </div>
+                            ))}
+                            <label className="flex items-center justify-center h-48 border-2 border-dashed border-green-500/20 rounded-lg cursor-pointer hover:bg-green-500/10 transition-colors">
+                                <div className="text-center">
+                                    <Upload className="w-6 h-6 mx-auto text-green-500" />
+                                    <p className="text-sm text-gray-400 mt-2">
+                                        Upload Screenshots
+                                    </p>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleScreenshotUpload}
+                                        className="hidden"
+                                    />
+                                </div>
+                            </label>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                            Upload up to 5 screenshots (PNG, JPG, max 2MB each)
+                        </p>
                     </div>
 
                     {/* Guidelines Section */}
