@@ -1,11 +1,11 @@
 export interface Profile {
   id: string;
-  full_name: string;
-  username: string;
-  bio: string;
-  website: string;
-  avatar_url: string;
-  email: string;
+  full_name: string | null;
+  username: string | null;
+  bio: string | null;
+  website: string | null;
+  avatar_url: string | null;
+  email: string | null;
   role: "user" | "admin";
   email_notifications: boolean;
   visibility: ProfileVisibility;
@@ -13,6 +13,21 @@ export interface Profile {
   pulse_balance: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserDetails extends Profile {
+  companions_count: number;
+  bookmarks_received: number;
+  total_messages: number;
+  companion_ids: string[];
+  recent_companions: Array<{
+    id: string;
+    name: string;
+    avatar_url: string;
+    description: string;
+    messages_count: number;
+    likes_count: number;
+  }> | null;
 }
 
 export interface ProfileFormData {

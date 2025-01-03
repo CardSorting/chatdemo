@@ -2,16 +2,8 @@ import { supabase } from "../../lib/supabase";
 
 export const getCompanionById = async (companionId: string) => {
   const { data, error } = await supabase
-    .from('companions')
-    .select(`
-      *,
-      creator:creator_id (
-        id,
-        full_name,
-        username,
-        avatar_url
-      )
-    `)
+    .from('companion_details')
+    .select('*')
     .eq('id', companionId)
     .single();
 
@@ -128,12 +120,52 @@ export const bookmarkCompanion = async (companionId: string) => {
 
 export const getCompanionsByUser = async (userId: string) => {
   const { data, error } = await supabase
-    .from('companions')
+    .from('companion_details')
     .select('*')
-    .eq('user_id', userId);
+    .eq('creator_id', userId);
 
   if (error) {
     console.error('Error fetching user companions:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+export const createCompanion = async (companion: {
+  id: string;
+  name: string;
+  description: string;
+  avatar_url: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  is_public: boolean;
+  tags: string[];
+  chat_url: string;
+  screenshots: string[];
+  avatar_file?: File;
+}) => {
+  const { data, error } = await supabase
+    .from('companions')
+    .insert({
+      id: companion.id,
+      name: companion.name,
+      description: companion.description,
+      avatar_url: companion.avatar_url,
+      created_at: companion.created_at,
+      updated_at: companion.updated_at,
+      user_id: companion.user_id,
+      is_public: companion.is_public,
+      tags: companion.tags,
+      chat_url: companion.chat_url,
+      screenshots: companion.screenshots
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating companion:', error);
     throw error;
   }
 
@@ -187,7 +219,7 @@ export const getBookmarkedCompanions = async ({
 
     // Get companion details
     let companionsQuery = supabase
-      .from('companions')
+      .from('companion_details')
       .select('*')
       .in('id', companionIds);
 

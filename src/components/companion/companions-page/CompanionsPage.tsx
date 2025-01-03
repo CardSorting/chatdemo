@@ -152,7 +152,7 @@ export default function CompanionsPage() {
             </button>
             
             <h3 className="text-xl font-semibold">
-              Support {companion?.creator_name || companion?.creator?.full_name || companion?.creator?.username || 'Creator'}
+              Support {companion?.creator_name || companion?.creator_username || 'Creator'}
             </h3>
             
             {/* Balance Info */}

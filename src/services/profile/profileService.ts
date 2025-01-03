@@ -1,14 +1,12 @@
 import { supabase } from "../../lib/supabase";
-import { Profile, ProfileUpdateData } from "../../types/profile";
+import { Profile, ProfileUpdateData, UserDetails } from "../../types/profile";
 import { Database } from "../../types/supabase";
 
 class ProfileService {
-  async getProfile(userId: string): Promise<Profile | null> {
+  async getProfile(userId: string): Promise<UserDetails | null> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select("*")
-        .eq("id", userId)
+        .rpc('get_user_details', { user_id: userId })
         .single();
 
       if (error) {
@@ -22,28 +20,14 @@ class ProfileService {
         throw new Error("Profile not found");
       }
 
-      return {
-        id: data.id,
-        full_name: data.full_name,
-        username: data.username,
-        bio: data.bio,
-        website: data.website,
-        avatar_url: data.avatar_url,
-        email: data.email,
-        role: data.role,
-        email_notifications: data.email_notifications,
-        visibility: data.visibility,
-        theme: data.theme,
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      } as Profile;
+      return data as UserDetails;
     } catch (error) {
       console.error("Error fetching profile:", error);
       throw error;
     }
   }
 
-  async updateProfile(userId: string, updateData: ProfileUpdateData): Promise<Profile> {
+  async updateProfile(userId: string, updateData: ProfileUpdateData): Promise<UserDetails> {
     // Validate required fields
     if (!updateData.full_name?.trim() || !updateData.username?.trim()) {
       throw new Error("Full name and username are required");
@@ -91,21 +75,8 @@ class ProfileService {
     if (error) throw error;
     if (!data) throw new Error("Profile update failed");
 
-    return {
-      id: data.id,
-      full_name: data.full_name,
-      username: data.username,
-      bio: data.bio,
-      website: data.website,
-      avatar_url: data.avatar_url,
-      email: data.email,
-      role: data.role,
-      email_notifications: data.email_notifications,
-      visibility: data.visibility,
-      theme: data.theme,
-      created_at: data.created_at,
-      updated_at: data.updated_at
-    } as Profile;
+    // Fetch updated user details
+    return this.getProfile(userId);
   }
 
   async getAchievements(): Promise<any[]> {

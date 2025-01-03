@@ -10,8 +10,9 @@ interface HeroSectionProps {
   companion: {
     avatar_url: string;
     name: string;
-    creator_name: string;
     creator_id: string;
+    creator_name: string;
+    creator_username: string;
     messages_count: number;
     likes_count: number;
     screenshots?: string[];
@@ -31,12 +32,6 @@ interface HeroSectionProps {
       text: string;
       author: string;
     }[];
-    creator?: {
-      id: string;
-      full_name?: string;
-      username?: string;
-      avatar_url?: string;
-    };
   };
 }
 
@@ -80,7 +75,7 @@ export function HeroSection({ companion }: HeroSectionProps) {
                       </p>
                     )}
                     <p className="text-lg text-gray-500 dark:text-gray-400">
-                      by {companion?.creator_name || companion?.creator?.full_name || companion?.creator?.username || 'Unknown Creator'}
+                      by {companion?.creator_name || companion?.creator_username || 'Unknown Creator'}
                     </p>
                   </div>
                   <div className="flex items-center gap-6">
@@ -151,7 +146,7 @@ export function HeroSection({ companion }: HeroSectionProps) {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                       <Info className="w-4 h-4" />
-                      <span>{companion?.creator_name || companion?.creator?.full_name || companion?.creator?.username || 'Unknown Creator'}</span>
+                      <span>{companion?.creator_name || companion?.creator_username || 'Unknown Creator'}</span>
                     </div>
                     <Button
                       variant="link"

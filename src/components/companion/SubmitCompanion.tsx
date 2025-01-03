@@ -23,7 +23,6 @@ interface CompanionFormData {
     user_id: string;
     is_public: boolean;
     tags: string[];
-    creator_name: string;
     chat_url: string;
     screenshots: string[];
 }
@@ -45,7 +44,6 @@ const SubmitCompanion = () => {
         user_id: user?.id || "",
         is_public: true,
         tags: [],
-        creator_name: user?.user_metadata?.full_name || "",
         chat_url: "",
         screenshots: []
     });

@@ -12,7 +12,8 @@ interface CompanionCardProps {
   companion: {
     id: string;
     name: string;
-    creator_name: string;
+    creator_name: string | null;
+    creator_username: string | null;
     avatar_url?: string;
     chat_url?: string;
   };
@@ -115,7 +116,7 @@ const CompanionCard = ({ companion }: CompanionCardProps) => {
               {companion.name}
             </h3>
             <p className="text-sm text-gray-400 text-center transform group-hover:translate-y-0 transition-transform duration-500">
-              by {companion.creator_name}
+              by {companion.creator_name || companion.creator_username || 'Unknown Creator'}
             </p>
           </div>
         </div>

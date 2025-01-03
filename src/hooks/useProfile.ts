@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { profileService } from "../services/profile/profileService";
-import { Profile, ProfileUpdateData } from "../types/profile";
+import { ProfileUpdateData, UserDetails } from "../types/profile";
 import { useAuth } from "./useAuth";
 import { useToast } from "../components/ui/use-toast";
 
 export const useProfile = (userId?: string) => {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<UserDetails | null>(null);
   const [achievements, setAchievements] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -125,5 +125,5 @@ export const useProfile = (userId?: string) => {
     updateProfile,
     updateAchievementProgress,
     refreshProfile: () => userId ? fetchProfile(userId) : Promise.resolve(),
-  };
+  } as const;
 };
