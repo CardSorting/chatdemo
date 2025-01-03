@@ -5,7 +5,7 @@ export interface Testimonial {
   text: string;
 }
 
-export interface SubscriptionTier {
+export interface PurchaseTier {
   name: string;
   price: string;
   pulse: string;
@@ -20,6 +20,26 @@ export interface CommunityStats {
   description: string;
 }
 
+export interface Purchase {
+  id: string;
+  user_id: string;
+  tier: string;
+  payment_id: string;
+  amount: number;
+  payment_date: string;
+  status: PurchaseStatus;
+  pulse_amount: number;
+  benefits: string[];
+  created_at: string;
+}
+
+export type PurchaseStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+
 export interface PayPalButtonContainerRef {
   current: HTMLDivElement | null;
+  purchaseDetails?: {
+    tier: string;
+    amount: number;
+    pulseAmount: number;
+  };
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { motion } from 'framer-motion';
-import { subscriptionTiers } from '../utils/data';
+import { purchaseTiers } from '../utils/data';
 import { PayPalButtonContainerRef } from '../types/subscription';
 
 interface PricingSectionProps {
@@ -10,9 +10,7 @@ interface PricingSectionProps {
 }
 
 const PricingSection: React.FC<PricingSectionProps> = ({ paypalButtonContainer }) => {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
-
-  const handleSubscribe = async (tier: string) => {
+  const handlePayment = async (tier: string) => {
     if (!paypalButtonContainer.current) {
       console.error("PayPal button container not found");
       return;
@@ -23,7 +21,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ paypalButtonContainer }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-      {subscriptionTiers.map((tier, index) => (
+      {purchaseTiers.map((tier, index) => (
         <motion.div
           key={index}
           whileHover={{ y: -10 }}
@@ -43,7 +41,6 @@ const PricingSection: React.FC<PricingSectionProps> = ({ paypalButtonContainer }
               <h2 className="text-2xl font-bold text-white">{tier.name}</h2>
               <p className="mt-4 text-4xl font-bold text-white">
                 {tier.price}
-                <span className="text-lg text-gray-300">/{billingCycle === 'monthly' ? 'month' : 'year'}</span>
               </p>
               <p className="mt-2 text-gray-300">{tier.pulse}</p>
             </div>
@@ -62,16 +59,6 @@ const PricingSection: React.FC<PricingSectionProps> = ({ paypalButtonContainer }
             <div className="mt-8">
               <div ref={paypalButtonContainer} id="paypal-button-container"></div>
               <div id="result-message" className="text-white mt-4"></div>
-              {/* <Button 
-                className={`w-full font-bold ${
-                  tier.popular 
-                    ? 'bg-gradient-to-r from-green-400 to-blue-400 hover:from-green-500 hover:to-blue-500 text-gray-950'
-                    : 'bg-gray-800 hover:bg-gray-700 text-white'
-                }`}
-                onClick={() => handleSubscribe(tier.name.toLowerCase())}
-              >
-                Subscribe
-              </Button> */}
             </div>
           </Card>
         </motion.div>

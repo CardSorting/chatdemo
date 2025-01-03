@@ -33,61 +33,28 @@ const usePaypalIntegration = () => {
             shape: "rect",
             layout: "vertical",
           },
-          async createSubscription() {
-            try {
-              const response = await fetch("/api/paypal/create-subscription", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ userAction: "SUBSCRIBE_NOW" }),
-              });
-              const data = await response.json();
-              if (data?.id) {
-                resultMessage(`Successful subscription...<br><br>`);
-                return data.id;
-              } else {
-                console.error(
-                  { callback: "createSubscription", serverResponse: data },
-                  JSON.stringify(data, null, 2),
-                );
-                const errorDetail = data?.details?.[0];
-                resultMessage(
-                  `Could not initiate PayPal Subscription...<br><br>${
-                    errorDetail?.issue || ""
-                  } ${errorDetail?.description || data?.message || ""} ` +
-                    (data?.debug_id ? `(${data.debug_id})` : ""),
-                );
-              }
-            } catch (error) {
-              console.error(error);
-              resultMessage(
-                `Could not initiate PayPal Subscription...<br><br>${error}`,
-              );
-            }
+          createOrder(data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: '10.00' // Set your desired amount here
+                }
+              }]
+            });
           },
-          onApprove(data) {
-            if (data.orderID) {
-              resultMessage(
-                `You have successfully subscribed to the plan. Your subscription id is: ${data.subscriptionID}`,
-              );
-            } else {
-              resultMessage(
-                `Failed to activate the subscription: ${data.subscriptionID}`,
-              );
-            }
+          onApprove(data, actions) {
+            return actions.order.capture().then(function(details) {
+              console.log('Payment approved:', details);
+              // Handle payment approval
+            });
           },
+          onError(err) {
+            console.error('PayPal error:', err);
+          }
         })
         .render(paypalButtonContainer.current);
     }
   }, [paypalSdkLoaded]);
-
-  const resultMessage = (message: string) => {
-    const container = document.querySelector("#result-message");
-    if (container) {
-      container.innerHTML = message;
-    }
-  };
 
   return { paypalButtonContainer };
 };

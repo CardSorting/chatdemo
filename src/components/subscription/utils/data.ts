@@ -1,4 +1,4 @@
-import { Testimonial, SubscriptionTier, CommunityStats } from '../types/subscription';
+import { Testimonial, PurchaseTier, CommunityStats } from '../types/subscription';
 
 export const testimonials: Testimonial[] = [
   {
@@ -21,44 +21,47 @@ export const testimonials: Testimonial[] = [
   }
 ];
 
-export const subscriptionTiers: SubscriptionTier[] = [
+export const purchaseTiers: PurchaseTier[] = [
   {
     name: 'Supporter',
-    price: '$5',
-    pulse: '1000 Pulse/month',
+    price: '$10',
+    pulse: '2000 Pulse',
     benefits: [
       'Early access to new features',
       'Supporter badge on profile',
       'Basic analytics access',
-      'Access to community Discord'
+      'Access to community Discord',
+      'One-time purchase'
     ],
     popular: false,
     color: 'from-green-400 to-blue-400'
   },
   {
     name: 'Creator',
-    price: '$15',
-    pulse: '2500 Pulse/month',
+    price: '$30',
+    pulse: '5000 Pulse',
     benefits: [
       'All Supporter benefits',
       'Custom profile theme',
       'Advanced analytics',
       'Priority support',
-      'Exclusive content library'
+      'Exclusive content library',
+      'One-time purchase'
     ],
     popular: true,
     color: 'from-purple-400 to-pink-400'
   },
   {
     name: 'Visionary',
-    price: '$25',
-    pulse: '5000 Pulse/month',
+    price: '$50',
+    pulse: '10000 Pulse',
     benefits: [
       'All Creator benefits',
       'Early voting on new features',
       'Personalized thank you',
-      '1:1 monthly consultation',
-      'Founder recognition'
+      '1:1 consultation',
+      'Founder recognition',
+      'One-time purchase'
     ],
     popular: false,
     color: 'from-yellow-400 to-orange-400'
