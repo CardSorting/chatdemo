@@ -15,6 +15,7 @@ import { Progress } from "../../../components/ui/progress";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip";
+import { supabase } from "../../../lib/supabase";
 
 export default function CompanionsPage() {
   const { companionId } = useParams<{ companionId: string }>();
@@ -22,9 +23,25 @@ export default function CompanionsPage() {
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
   const [showTippingPopup, setShowTippingPopup] = useState(false);
 
-  const { data: companion, isLoading, isError } = useQuery({
+  // Fetch companion data
+  const { data: companion, isLoading: isCompanionLoading, isError: isCompanionError } = useQuery({
     queryKey: ["companion", companionId],
     queryFn: () => getCompanionById(companionId!),
+  });
+
+  // Fetch reviews data
+  const { data: reviews, isLoading: isReviewsLoading, isError: isReviewsError } = useQuery({
+    queryKey: ["reviews", companionId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .eq("companion_id", companionId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
   });
 
   const {
@@ -45,49 +62,22 @@ export default function CompanionsPage() {
   }, []);
 
   useEffect(() => {
-    if (isError) {
+    if (isCompanionError || isReviewsError) {
       toast({
         title: "Error",
         description: "Failed to load companion details",
         variant: "destructive",
       });
     }
-  }, [isError, toast]);
+  }, [isCompanionError, isReviewsError, toast]);
 
-  if (isLoading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
+  if (isCompanionLoading) {
+    return <div className="container mx-auto px-4 py-8">Loading companion details...</div>;
   }
 
-  if (isError || !companion) {
+  if (isCompanionError || !companion) {
     return <div className="container mx-auto px-4 py-8">Failed to load companion details</div>;
   }
-
-  const reviews = [
-    {
-      user: "User1",
-      rating: 5,
-      comment: "Amazing companion! The conversations feel incredibly natural and engaging.",
-      date: "2025-01-01",
-      helpfulCount: 12,
-      isVerified: true,
-    },
-    {
-      user: "User2",
-      rating: 5,
-      comment: "I'm impressed by how well it understands context and maintains meaningful dialogue.",
-      date: "2025-01-02",
-      helpfulCount: 8,
-      isVerified: false,
-    },
-    {
-      user: "User3",
-      rating: 4,
-      comment: "Great experience overall, though sometimes responses could be faster.",
-      date: "2025-01-03",
-      helpfulCount: 5,
-      isVerified: true,
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -134,7 +124,10 @@ export default function CompanionsPage() {
         {/* Reviews Section */}
         <div className="py-16">
           <div className="max-w-4xl mx-auto">
-            <ReviewsSection reviews={reviews} />
+            <ReviewsSection 
+              reviews={reviews || []} 
+              isLoading={isReviewsLoading}
+            />
           </div>
         </div>
       </div>

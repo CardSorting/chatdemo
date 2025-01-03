@@ -12,28 +12,31 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../../../../components/
 import { Popover, PopoverContent, PopoverTrigger } from "../../../../components/ui/popover";
 import { Label } from "../../../../components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../../../../components/ui/radio-group";
+import { Skeleton } from "../../../../components/ui/skeleton";
 
 interface Review {
-  user: string;
+  id: string;
+  user_id: string;
   rating: number;
   comment: string;
-  date: string;
-  helpfulCount: number;
-  isVerified: boolean;
+  created_at: string;
+  helpful_count: number;
+  is_verified: boolean;
   images?: string[];
-  developerResponse?: string;
+  developer_response?: string;
   sentiment?: "positive" | "neutral" | "negative";
-  helpfulPercentage?: number;
-  isPinned?: boolean;
-  versionHistory?: string[];
-  contentWarning?: string;
+  helpful_percentage?: number;
+  is_pinned?: boolean;
+  version_history?: string[];
+  content_warning?: string;
 }
 
 interface ReviewsSectionProps {
   reviews: Review[];
+  isLoading: boolean;
 }
 
-export function ReviewsSection({ reviews }: ReviewsSectionProps) {
+export function ReviewsSection({ reviews, isLoading }: ReviewsSectionProps) {
   const [sortBy, setSortBy] = useState("mostHelpful");
   const [visibleReviews, setVisibleReviews] = useState(3);
   const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({});
@@ -43,11 +46,15 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
 
   // Calculate review statistics
   const totalReviews = reviews.length;
-  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews;
+  const averageRating = totalReviews > 0 
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews).toFixed(1)
+    : "0.0";
   const ratingDistribution = [5, 4, 3, 2, 1].map((rating) => ({
     rating,
     count: reviews.filter((r) => r.rating === rating).length,
-    percentage: (reviews.filter((r) => r.rating === rating).length / totalReviews) * 100,
+    percentage: totalReviews > 0 
+      ? (reviews.filter((r) => r.rating === rating).length / totalReviews) * 100
+      : 0,
   }));
 
   // Filter and sort reviews
@@ -58,8 +65,8 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
   });
 
   const sortedReviews = [...filteredReviews].sort((a, b) => {
-    if (sortBy === "mostHelpful") return b.helpfulCount - a.helpfulCount;
-    if (sortBy === "mostRecent") return new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (sortBy === "mostHelpful") return b.helpful_count - a.helpful_count;
+    if (sortBy === "mostRecent") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     return b.rating - a.rating;
   });
 
@@ -76,6 +83,54 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
     setReportReason("");
   };
 
+  if (isLoading) {
+    return (
+      <section className="space-y-6">
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-48" />
+          <div className="flex gap-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-96" />
+          </div>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="flex items-start gap-4">
+                <Skeleton className="w-10 h-10 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-4 w-64" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (totalReviews === 0) {
+    return (
+      <section className="space-y-6">
+        <div className="flex flex-col items-center justify-center text-center py-16">
+          <div className="max-w-md space-y-4">
+            <h2 className="text-2xl font-bold">No Reviews Yet</h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              Be the first to share your experience with this companion!
+            </p>
+            <Button className="gap-2">
+              Write a Review
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="space-y-6">
       {/* Review Summary */}
@@ -84,19 +139,19 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
           <h2 className="text-2xl font-bold">User Reviews</h2>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="text-4xl font-bold">{averageRating.toFixed(1)}</div>
+              <div className="text-4xl font-bold">{averageRating}</div>
               <div className="flex flex-col gap-1">
                 <div className="flex items-center">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
                       className="w-5 h-5 text-yellow-400"
-                      fill={star <= Math.round(averageRating) ? "currentColor" : "none"}
+                      fill={star <= Math.round(Number(averageRating)) ? "currentColor" : "none"}
                     />
                   ))}
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  {totalReviews} reviews
+                  {totalReviews} review{totalReviews !== 1 ? 's' : ''}
                 </p>
               </div>
             </div>
@@ -166,24 +221,24 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
 
       {/* Reviews List */}
       <div className="space-y-4">
-        {sortedReviews.slice(0, visibleReviews).map((review, i) => (
-          <Card key={i} className="p-6">
+        {sortedReviews.slice(0, visibleReviews).map((review) => (
+          <Card key={review.id} className="p-6">
             <div className="flex items-start gap-4">
               <Avatar>
-                <AvatarFallback>{review.user[0]}</AvatarFallback>
+                <AvatarFallback>{review.user_id[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 {/* Review Header */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-semibold">{review.user}</h4>
-                    {review.isVerified && (
+                    <h4 className="font-semibold">{review.user_id}</h4>
+                    {review.is_verified && (
                       <Badge variant="outline" className="gap-1 text-xs">
                         <CheckCircle className="w-3 h-3" />
                         Verified
                       </Badge>
                     )}
-                    {review.isPinned && (
+                    {review.is_pinned && (
                       <Tooltip>
                         <TooltipTrigger>
                           <Badge variant="outline" className="gap-1 text-xs">
@@ -207,11 +262,11 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
                 </div>
 
                 {/* Content Warning */}
-                {review.contentWarning && (
+                {review.content_warning && (
                   <div className="mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                     <p className="text-yellow-600 dark:text-yellow-400 text-sm">
-                      {review.contentWarning}
+                      {review.content_warning}
                     </p>
                   </div>
                 )}
@@ -237,7 +292,7 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
                 )}
 
                 {/* Developer Response */}
-                {review.developerResponse && (
+                {review.developer_response && (
                   <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Avatar className="w-6 h-6">
@@ -246,7 +301,7 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
                       <span className="font-medium">Developer Response</span>
                     </div>
                     <p className="text-gray-600 dark:text-gray-300 text-sm">
-                      {review.developerResponse}
+                      {review.developer_response}
                     </p>
                   </div>
                 )}
@@ -255,9 +310,9 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
                 <div className="flex items-center justify-between mt-4">
                   <div className="flex items-center gap-4">
                     <p className="text-gray-400 text-xs">
-                      {formatDistanceToNow(new Date(review.date), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
                     </p>
-                    {review.versionHistory && review.versionHistory.length > 1 && (
+                    {review.version_history && review.version_history.length > 1 && (
                       <Tooltip>
                         <TooltipTrigger>
                           <Button variant="ghost" size="sm" className="gap-1 text-xs">
@@ -268,7 +323,7 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
                         <TooltipContent>
                           <div className="space-y-2">
                             <p className="font-medium">Edit History</p>
-                            {review.versionHistory.map((version, idx) => (
+                            {review.version_history.map((version, idx) => (
                               <p key={idx} className="text-sm">
                                 Version {idx + 1}: {formatDistanceToNow(new Date(version), { addSuffix: true })}
                               </p>
@@ -283,10 +338,10 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
                       variant="ghost"
                       size="sm"
                       className="gap-1 text-xs"
-                      onClick={() => handleHelpfulClick(i.toString())}
+                      onClick={() => handleHelpfulClick(review.id)}
                     >
                       <ThumbsUp className="w-3 h-3" />
-                      Helpful ({helpfulVotes[i.toString()] ? review.helpfulCount + 1 : review.helpfulCount})
+                      Helpful ({helpfulVotes[review.id] ? review.helpful_count + 1 : review.helpful_count})
                     </Button>
                     <Button variant="ghost" size="sm" className="gap-1 text-xs">
                       <ThumbsDown className="w-3 h-3" />
@@ -325,7 +380,7 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
                           </RadioGroup>
                           <Button
                             size="sm"
-                            onClick={() => handleReport(i.toString())}
+                            onClick={() => handleReport(review.id)}
                           >
                             Submit Report
                           </Button>
