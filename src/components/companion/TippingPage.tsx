@@ -1,8 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useTipping } from "@lib/tipping/hooks/useTipping";
-import { TippingForm } from "@lib/tipping/components/TippingForm";
 import { Button } from "../../components/ui/button";
-import { ArrowLeft, Gift, Trophy, Users, Sparkles, Share2, Heart, Loader2, CreditCard, Shield, Smile, MessageCircle, Image, BookOpen, Check, Star, Clock, TrendingUp, HelpCircle, Video, PieChart, Calendar, BadgeCheck } from "lucide-react";
+import { ArrowLeft, Gift, Trophy, Users, Sparkles, Share2, Heart, Loader2, CreditCard, Shield, Smile, MessageCircle, Image, BookOpen, Check, Star, Clock, TrendingUp, HelpCircle, Video, PieChart, Calendar, BadgeCheck, Info, History, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Progress } from "../../components/ui/progress";
@@ -14,6 +13,9 @@ import { toast } from "../../components/ui/use-toast";
 import { UseTippingReturn } from "@lib/tipping/types";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip";
 
 export default function TippingPage() {
   const { creatorId, creatorName } = useParams();
@@ -104,26 +106,6 @@ export default function TippingPage() {
               <p className="text-white/90 text-lg max-w-prose mx-auto mb-6">
                 Help {creatorName} continue creating amazing content and reach new milestones
               </p>
-              <div className="flex justify-center gap-4">
-                <Button
-                  variant="default"
-                  size="lg"
-                  className="bg-white text-gray-900 hover:bg-gray-100"
-                  onClick={() => setTipAmount(10)}
-                >
-                  <Heart className="w-5 h-5 mr-2" />
-                  Donate $10
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="text-white border-white/30 hover:bg-white/10"
-                  onClick={() => setTipAmount(25)}
-                >
-                  <Gift className="w-5 h-5 mr-2" />
-                  Donate $25
-                </Button>
-              </div>
             </div>
           </div>
         </div>
@@ -131,6 +113,134 @@ export default function TippingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-12">
+            {/* Tipping Section */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Gift className="w-6 h-6 text-purple-500" />
+                Support {creatorName}
+              </h2>
+              <Card className="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                <div className="space-y-6">
+                  {/* Balance Info */}
+                  <Card className="p-4 bg-primary/5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium">Your Balance</h3>
+                        <p className="text-xl sm:text-2xl font-bold">
+                          {state.userBalance} Pulse
+                        </p>
+                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="w-5 h-5 text-gray-400 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Your available balance for tipping
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </Card>
+
+                  {/* Tip Amounts */}
+                  <div className="space-y-4">
+                    <Label>Select Amount</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {[10, 50, 100].map((amount) => (
+                        <Button
+                          key={amount}
+                          variant={
+                            state.tipAmount === amount ? "default" : "outline"
+                          }
+                          onClick={() => setTipAmount(amount)}
+                          className={`h-14 transition-all ${
+                            amount <= state.userBalance
+                              ? "hover:scale-[1.02]"
+                              : "opacity-50 cursor-not-allowed"
+                          }`}
+                          disabled={amount > state.userBalance}
+                        >
+                          {amount} Pulse
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Amount */}
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-amount">Custom Amount</Label>
+                    <div className="relative">
+                      <Input
+                        id="custom-amount"
+                        type="number"
+                        value={state.customAmount}
+                        onChange={(e) => handleCustomAmountChange(e.target.value)}
+                        placeholder="Enter amount"
+                        className={`h-12 pr-16 ${
+                          !state.isValidAmount
+                            ? "border-red-500 focus:ring-red-500"
+                            : ""
+                        }`}
+                        aria-invalid={!state.isValidAmount}
+                        min="1"
+                        max={state.userBalance}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                        Pulse
+                      </span>
+                    </div>
+                    {!state.isValidAmount && (
+                      <p className="text-sm text-red-500">
+                        Please enter a valid amount within your balance
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Tip Progress */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300">
+                      <span>Amount to Send</span>
+                      <span>
+                        {state.customAmount || state.tipAmount} /{" "}
+                        {state.userBalance} Pulse
+                      </span>
+                    </div>
+                    <Progress
+                      value={state.customAmount
+                        ? (parseFloat(state.customAmount) / state.userBalance) * 100
+                        : (state.tipAmount / state.userBalance) * 100
+                      }
+                      className="h-2"
+                    />
+                  </div>
+
+                  {/* Send Button */}
+                  <Button
+                    onClick={() =>
+                      state.customAmount ? handleTip(parseFloat(state.customAmount)) : handleTip(state.tipAmount)
+                    }
+                    disabled={
+                      state.isTipping ||
+                      state.isLoading ||
+                      (state.customAmount && !state.isValidAmount)
+                    }
+                    className="w-full h-14 gap-2"
+                    size="lg"
+                  >
+                    {state.isTipping ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Gift className="w-5 h-5" />
+                    )}
+                    <span>
+                      Send {state.customAmount || state.tipAmount} Pulse
+                    </span>
+                  </Button>
+                </div>
+              </Card>
+            </div>
+
             {/* Story Section */}
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
