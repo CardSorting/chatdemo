@@ -10,11 +10,11 @@ const SubscriptionPage = () => {
   const paypalButtonContainer = useRef(null);
 
   const handlePaymentSuccess = (pulseAmount: number) => {
-    console.log(`Payment successful! Added ${pulseAmount} Pulse`);
+    console.log('[SubscriptionPage] Payment success handler called with amount:', pulseAmount);
   };
 
   const handlePaymentError = () => {
-    console.error('Payment error occurred');
+    console.error('[SubscriptionPage] Payment error occurred');
   };
 
   const { updateSelectedAmount } = usePaypalIntegration({

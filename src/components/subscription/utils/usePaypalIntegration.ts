@@ -55,6 +55,7 @@ const usePaypalIntegration = ({
           layout: "vertical",
         },
         createOrder(data: any, actions: any) {
+          console.log('Creating PayPal order');
           return actions.order.create({
             purchase_units: [{
               amount: {
@@ -64,8 +65,9 @@ const usePaypalIntegration = ({
           });
         },
         onApprove(data: any, actions: any) {
+          console.log('PayPal payment approved');
           return actions.order.capture().then(async function(details: any) {
-            console.log('Payment approved:', details);
+            console.log('Payment captured:', details);
             
             try {
               // Add Pulse credits based on payment amount
@@ -76,6 +78,7 @@ const usePaypalIntegration = ({
               console.log('Pulse addition result:', result);
               
               if (result.success) {
+                console.log('Calling onPaymentSuccess with amount:', pulseAmount);
                 onPaymentSuccess(pulseAmount);
               } else {
                 throw new Error('Failed to add pulse: ' + result.error);
@@ -97,11 +100,13 @@ const usePaypalIntegration = ({
   // Reinitialize button when amount changes
   useEffect(() => {
     if (paypalSdkLoaded && user?.id) {
+      console.log('Reinitializing PayPal button');
       initializePayPalButton();
     }
   }, [paypalSdkLoaded, selectedAmount, initializePayPalButton, user]);
 
   const updateSelectedAmount = (amount: string) => {
+    console.log('Updating selected amount to:', amount);
     setSelectedAmount(amount);
   };
 

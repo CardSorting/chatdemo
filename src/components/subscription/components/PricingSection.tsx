@@ -22,6 +22,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    console.log('[PricingSection] showSuccess changed:', showSuccess);
     if (showSuccess) {
       // Animate progress bar
       const interval = setInterval(() => {
@@ -40,17 +41,18 @@ const PricingSection: React.FC<PricingSectionProps> = ({
     }
   }, [showSuccess]);
 
-  const handleTierSelect = (index: number) => {
-    setSelectedTier(index);
-    // Update PayPal amount based on selected tier
-    const amount = index === 0 ? '10.00' : index === 1 ? '30.00' : '50.00';
-    updateSelectedAmount(amount);
-  };
-
   const handlePaymentSuccess = (amount: number) => {
+    console.log('[PricingSection] Handling payment success with amount:', amount);
     setPulseAmount(amount);
     setShowSuccess(true);
-    onPaymentSuccess(amount); // Call the parent success handler
+    onPaymentSuccess(amount);
+  };
+
+  const handleTierSelect = (index: number) => {
+    console.log('[PricingSection] Tier selected:', index);
+    setSelectedTier(index);
+    const amount = index === 0 ? '10.00' : index === 1 ? '30.00' : '50.00';
+    updateSelectedAmount(amount);
   };
 
   return (
