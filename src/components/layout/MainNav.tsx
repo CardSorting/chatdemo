@@ -61,6 +61,7 @@ const MainNav = () => {
                 <Compass className="w-4 h-4 mr-2" />
                 Explore
               </Button>
+              
               {user && (
                 <Button
                   variant="ghost"
@@ -72,6 +73,15 @@ const MainNav = () => {
                   My Companions
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`${isActive("/subscribe") ? "text-green-400" : "text-gray-400"} hover:text-green-400`}
+                onClick={() => navigate("/subscribe")}
+              >
+                <Compass className="w-4 h-4 mr-2" />
+                Subscribe
+              </Button>
             </nav>
           </div>
 
