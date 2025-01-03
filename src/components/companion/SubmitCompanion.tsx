@@ -12,6 +12,20 @@ import { useAuth } from "../../lib/auth";
 import { createCompanion, getAvailableFilters } from "../../services/companion/companion";
 import { Bot, Loader2, Info, Upload, Sparkles, Tags, Link2, AlertCircle, Smartphone, Monitor, Check } from "lucide-react";
 
+interface CompanionFormData {
+  id: string;
+  name: string;
+  description: string;
+  avatar_url: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  is_public: boolean;
+  tags: string[];
+  creator_name: string;
+  chat_url: string;
+}
+
 const SubmitCompanion = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -19,15 +33,20 @@ const SubmitCompanion = () => {
     const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
     const [formProgress, setFormProgress] = useState(0);
     const { user } = useAuth();
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<CompanionFormData>({
+        id: crypto.randomUUID(),
         name: "",
         description: "",
         avatar_url: "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: user?.id || "",
+        is_public: true,
+        tags: [],
         creator_name: user?.user_metadata?.full_name || "",
-        chat_url: "",
-        categories: [] as string[]
+        chat_url: ""
     });
-    const [availableCategories, setAvailableCategories] = useState<{ id: string, name: string }[]>([]);
+    const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -73,7 +92,7 @@ const SubmitCompanion = () => {
         if (formData.name) progress += 25;
         if (formData.description) progress += 25;
         if (formData.chat_url) progress += 25;
-        if (formData.categories.length > 0) progress += 25;
+        if (formData.tags.length > 0) progress += 25;
         setFormProgress(progress);
     }, [formData]);
 
@@ -323,22 +342,22 @@ const SubmitCompanion = () => {
                                     </Label>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                         {availableCategories.map((category) => (
-                                            <div key={category.id} className="flex items-center space-x-2">
+                                            <div key={category} className="flex items-center space-x-2">
                                                 <Checkbox
-                                                    id={category.id}
-                                                    checked={formData.categories.includes(category.id)}
+                                                    id={category}
+                                                    checked={formData.tags.includes(category)}
                                                     onCheckedChange={(checked) => {
                                                         setFormData(prev => ({
                                                             ...prev,
-                                                            categories: checked
-                                                                ? [...prev.categories, category.id]
-                                                                : prev.categories.filter(id => id !== category.id)
+                                                            tags: checked
+                                                                ? [...prev.tags, category]
+                                                                : prev.tags.filter(id => id !== category)
                                                         }));
                                                     }}
                                                     className="border-green-500/50 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                                                 />
-                                                <Label htmlFor={category.id} className="text-gray-300">
-                                                    {category.name}
+                                                <Label htmlFor={category} className="text-gray-300">
+                                                    {category}
                                                 </Label>
                                             </div>
                                         ))}
@@ -382,47 +401,6 @@ const SubmitCompanion = () => {
                                     <p className="text-xs text-gray-400 text-right">
                                         {formData.description.length}/300 characters
                                     </p>
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="discovery" className="space-y-6">
-                                <h3 className="text-xl font-semibold text-green-400 flex items-center gap-2">
-                                    <Tags className="w-5 h-5" />
-                                    Categories
-                                </h3>
-                                <div className="space-y-4">
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Label className="text-gray-200 cursor-help">Select Categories</Label>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                Choose up to 3 categories that best describe your companion
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        {availableCategories.map((category) => (
-                                            <div key={category.id} className="flex items-center space-x-2">
-                                                <Checkbox
-                                                    id={category.id}
-                                                    checked={formData.categories.includes(category.id)}
-                                                    onCheckedChange={(checked) => {
-                                                        setFormData(prev => ({
-                                                            ...prev,
-                                                            categories: checked
-                                                                ? [...prev.categories, category.id]
-                                                                : prev.categories.filter(id => id !== category.id)
-                                                        }));
-                                                    }}
-                                                    className="border-green-500/50 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                                                />
-                                                <Label htmlFor={category.id} className="text-gray-300">
-                                                    {category.name}
-                                                </Label>
-                                            </div>
-                                        ))}
-                                    </div>
                                 </div>
                             </TabsContent>
 
