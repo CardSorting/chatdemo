@@ -14,7 +14,7 @@ const usePaypalIntegration = () => {
   // Load PayPal SDK
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.VITE_PAYPAL_CLIENT_ID}`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${import.meta.env.VITE_PAYPAL_CLIENT_ID}`;
     script.async = true;
     script.onload = () => setPaypalSdkLoaded(true);
     document.body.appendChild(script);

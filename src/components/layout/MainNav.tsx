@@ -76,8 +76,8 @@ const MainNav = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`${isActive("/subscribe") ? "text-green-400" : "text-gray-400"} hover:text-green-400`}
-                onClick={() => navigate("/subscribe")}
+                className={`${isActive("/subscription") ? "text-green-400" : "text-gray-400"} hover:text-green-400`}
+                onClick={() => navigate("/subscription")}
               >
                 <Compass className="w-4 h-4 mr-2" />
                 Subscribe
