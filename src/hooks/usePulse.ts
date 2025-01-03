@@ -14,39 +14,77 @@ export const usePulse = (userId: string) => {
 
   useEffect(() => {
     const fetchBalance = async () => {
-      // Reset balance to 0 if no userId
-      if (!userId || userId === '') {
+      setLoading(true);
+      
+      // Reset balance if no userId
+      if (!userId) {
         setBalance(0);
         setLoading(false);
         return;
       }
 
       try {
+        console.log('Fetching balance for userId:', userId);
+        // First verify the user exists
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          console.error('Error getting user:', userError);
+          throw userError;
+        }
+        
+        if (!userData.user) {
+          console.log('No authenticated user found');
+          setBalance(0);
+          return;
+        }
+
+        // Then fetch the profile with pulse balance
         const { data, error } = await supabase
           .from('profiles')
           .select('pulse_balance')
           .eq('id', userId)
-          .single();
+          .limit(1)
+          .maybeSingle();
+
+        console.log('Profile query result:', { data, error });
+
+        console.log('Fetch result:', { data, error });
 
         if (error) {
+          console.error('Error fetching profile:', error);
           if (error.code === 'PGRST116') { // No rows found
+            console.log('No profile found, setting balance to 0');
             setBalance(0);
           } else {
-            throw error;
+            console.error('Database error:', error.message, error.details, error.hint);
+            setError(error);
           }
-        } else if (data) {
-          setBalance(data.pulse_balance || 0);
+        } else if (!data) {
+          console.log('No profile data found, setting balance to 0');
+          setBalance(0);
+        } else {
+          const newBalance = data.pulse_balance ?? 0;
+          console.log('Setting new balance:', newBalance, 'from data:', data);
+          setBalance(newBalance);
         }
       } catch (err) {
         console.error('Error fetching pulse balance:', err);
         setError(err as Error);
-        setBalance(0);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBalance();
+    console.log('useEffect triggered with userId:', userId);
+    // Only fetch if we have a userId
+    if (userId) {
+      console.log('Starting balance fetch for userId:', userId);
+      fetchBalance();
+    } else {
+      console.log('No userId provided, setting balance to 0');
+      setBalance(0);
+      setLoading(false);
+    }
   }, [userId]);
 
   const addPulse = async (amount: number): Promise<AddPulseResponse> => {

@@ -97,6 +97,17 @@ export function useTipping(creatorId: string): UseTippingReturn {
 
   const handleTip = async (amount: number) => {
     if (!session?.user?.id) return;
+
+    // Prevent self-tipping
+    if (session.user.id === creatorId) {
+      toast({
+        title: "Invalid Action",
+        description: "You cannot tip yourself.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!validateAmount(amount)) {
       toast({
         title: "Invalid Amount",

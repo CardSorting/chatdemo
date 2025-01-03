@@ -139,18 +139,18 @@ export default function TippingPage() {
                   whileTap={{ scale: 0.95 }}
                 >
                   <Avatar className="w-32 h-32 border-4 border-white/20">
-                    <AvatarImage src={companion.avatar_url} />
+                    <AvatarImage src={companion?.avatar_url} />
                     <AvatarFallback>
-                      {companion.name?.charAt(0).toUpperCase()}
+                      {companion?.name?.[0]?.toUpperCase() || '?'}
                     </AvatarFallback>
                   </Avatar>
                 </motion.div>
               </div>
               <h1 className="text-4xl font-bold text-white mb-4">
-                Support {companion.creator_name}
+                Support {companion?.creator_name || 'Creator'}
               </h1>
               <p className="text-white/90 text-lg max-w-prose mx-auto mb-6">
-                Help {companion.creator_name} continue creating amazing content
+                Help {companion?.creator_name || 'this creator'} continue creating amazing content
               </p>
             </div>
           </div>
@@ -262,6 +262,8 @@ export default function TippingPage() {
                 disabled={
                   state.isTipping ||
                   state.isLoading ||
+                  isLoadingCompanion ||
+                  !companion ||
                   (state.customAmount && !state.isValidAmount)
                 }
                 className="w-full h-14 gap-2"

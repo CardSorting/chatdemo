@@ -22,12 +22,13 @@ import { useAuth } from "../../hooks/useAuth";
 import { usePulse } from "../../hooks/usePulse";
 import { Badge } from "../ui/badge";
 import { SearchBar } from "../ui/SearchBar";
+import { cn } from "../../lib/utils";
 
 const MainNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, loading: authLoading, signOut } = useAuth();
-  const { balance, loading: pulseLoading } = usePulse(user?.id || '');
+  const { balance, loading: pulseLoading, error: pulseError } = usePulse(user?.id);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -102,8 +103,15 @@ const MainNav = () => {
                     </Button>
 
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="border-green-500/20 text-green-400">
-                        {pulseLoading ? "..." : `${balance} Pulse`}
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "border-green-500/20",
+                          pulseError ? "text-red-400" : "text-green-400"
+                        )}
+                        title={pulseError ? "Error loading balance" : undefined}
+                      >
+                        {authLoading || pulseLoading ? "..." : pulseError ? "!" : `${balance} Pulse`}
                       </Badge>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

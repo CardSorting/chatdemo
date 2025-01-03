@@ -91,10 +91,10 @@ export default function CompanionsPage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={companion.avatar_url} />
-              <AvatarFallback>{companion.name[0]}</AvatarFallback>
+              <AvatarImage src={companion?.avatar_url} />
+              <AvatarFallback>{companion?.name?.[0] || '?'}</AvatarFallback>
             </Avatar>
-            <h2 className="font-semibold">{companion.name}</h2>
+            <h2 className="font-semibold">{companion?.name || 'Loading...'}</h2>
           </div>
           <div className="flex items-center gap-2">
             <Button 
@@ -118,7 +118,7 @@ export default function CompanionsPage() {
         
         {/* Screenshots Section */}
         <div className="py-12">
-          <ScreenshotsSection screenshots={companion.screenshots} />
+          <ScreenshotsSection screenshots={companion?.screenshots} />
         </div>
 
         {/* Reviews Section */}
@@ -151,7 +151,9 @@ export default function CompanionsPage() {
               <X className="w-4 h-4" />
             </button>
             
-            <h3 className="text-xl font-semibold">Support {companion.creator_name}</h3>
+            <h3 className="text-xl font-semibold">
+              Support {companion?.creator_name || companion?.creator?.full_name || companion?.creator?.username || 'Creator'}
+            </h3>
             
             {/* Balance Info */}
             <div className="bg-primary/5 p-4 rounded-lg">

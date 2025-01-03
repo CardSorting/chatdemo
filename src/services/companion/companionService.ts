@@ -3,7 +3,15 @@ import { supabase } from "../../lib/supabase";
 export const getCompanionById = async (companionId: string) => {
   const { data, error } = await supabase
     .from('companions')
-    .select('*')
+    .select(`
+      *,
+      creator:creator_id (
+        id,
+        full_name,
+        username,
+        avatar_url
+      )
+    `)
     .eq('id', companionId)
     .single();
 

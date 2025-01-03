@@ -31,6 +31,12 @@ interface HeroSectionProps {
       text: string;
       author: string;
     }[];
+    creator?: {
+      id: string;
+      full_name?: string;
+      username?: string;
+      avatar_url?: string;
+    };
   };
 }
 
@@ -50,8 +56,8 @@ export function HeroSection({ companion }: HeroSectionProps) {
               <div className="flex items-start gap-6">
                 <div className="relative">
                   <Avatar className="w-32 h-32 rounded-3xl border-4 border-white dark:border-gray-900 shadow-lg ring-4 ring-blue-100/50 dark:ring-blue-900/50">
-                    <AvatarImage src={companion.avatar_url} />
-                    <AvatarFallback>{companion.name[0]}</AvatarFallback>
+                    <AvatarImage src={companion?.avatar_url} />
+                    <AvatarFallback>{companion?.name?.[0] || '?'}</AvatarFallback>
                   </Avatar>
                   {companion.rating && (
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
@@ -62,7 +68,7 @@ export function HeroSection({ companion }: HeroSectionProps) {
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <h1 className="text-5xl font-bold mb-2">{companion.name}</h1>
+                    <h1 className="text-5xl font-bold mb-2">{companion?.name}</h1>
                     {companion.tagline && (
                       <p className="text-lg text-gray-600 dark:text-gray-300 mb-2">
                         {companion.tagline}
@@ -74,14 +80,14 @@ export function HeroSection({ companion }: HeroSectionProps) {
                       </p>
                     )}
                     <p className="text-lg text-gray-500 dark:text-gray-400">
-                      by {companion.creator_name}
+                      by {companion?.creator_name || companion?.creator?.full_name || companion?.creator?.username || 'Unknown Creator'}
                     </p>
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
                       <MessageCircle className="w-5 h-5 text-gray-400" />
                       <span className="text-sm text-gray-600 dark:text-gray-300">
-                        {companion.messages_count || 0} messages
+                        {companion?.messages_count?.toLocaleString() || 0} messages
                       </span>
                     </div>
                   </div>
@@ -105,18 +111,18 @@ export function HeroSection({ companion }: HeroSectionProps) {
               </div>
 
               {/* What's New Section */}
-              {companion.version && (
+              {companion?.version && (
                 <Card className="p-6 bg-white dark:bg-gray-900 shadow-sm">
                   <div className="space-y-2">
                     <h3 className="font-semibold text-lg">What's New</h3>
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                       <Calendar className="w-4 h-4" />
-                      <span>Version {companion.version}</span>
-                      {companion.last_updated && (
+                      <span>Version {companion?.version}</span>
+                      {companion?.last_updated && (
                         <>
                           <span>•</span>
                           <Clock className="w-4 h-4" />
-                          <span>Updated {companion.last_updated}</span>
+                          <span>Updated {companion?.last_updated}</span>
                         </>
                       )}
                     </div>
@@ -138,21 +144,21 @@ export function HeroSection({ companion }: HeroSectionProps) {
             </div>
 
             {/* Developer Section */}
-            {developerInfo.website && (
+            {developerInfo?.website && (
               <Card className="p-6 bg-white dark:bg-gray-900 shadow-sm">
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg">Developer</h3>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                       <Info className="w-4 h-4" />
-                      <span>{companion.creator_name}</span>
+                      <span>{companion?.creator_name || companion?.creator?.full_name || companion?.creator?.username || 'Unknown Creator'}</span>
                     </div>
                     <Button
                       variant="link"
                       className="p-0 h-auto text-blue-600 dark:text-blue-400"
                       asChild
                     >
-                      <a href={developerInfo.website} target="_blank" rel="noopener noreferrer">
+                      <a href={developerInfo?.website} target="_blank" rel="noopener noreferrer">
                         Visit Developer Website
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </a>
