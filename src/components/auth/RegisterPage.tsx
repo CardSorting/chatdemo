@@ -4,6 +4,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { updatePulseBalance } from "../../services/pulse/pulseService";
 
 const RegisterPage = () => {
   const { signIn } = useAuth();
@@ -48,6 +49,9 @@ const RegisterPage = () => {
 
       if (profileError) throw profileError;
       
+      // Award 500 pulse for registering
+      await updatePulseBalance(authUser.user?.id as string, 500);
+
       await signIn(email, password);
       navigate(-1); // Go back to previous page after registration
     } catch (err) {
